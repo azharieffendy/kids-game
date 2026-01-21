@@ -1,0 +1,779 @@
+[
+    {
+        "word": "AIR",
+        "emoji": "💧",
+        "imageUrl": "",
+        "hint": "Cairan yang diperlukan untuk hidup",
+        "difficulty": "easy"
+    },
+    {
+        "word": "JAM",
+        "emoji": "⏰",
+        "imageUrl": "",
+        "hint": "Alat untuk melihat waktu",
+        "difficulty": "easy"
+    },
+    {
+        "word": "TAS",
+        "emoji": "🎒",
+        "imageUrl": "",
+        "hint": "Untuk membawa buku",
+        "difficulty": "easy"
+    },
+    {
+        "word": "TEH",
+        "emoji": "🍵",
+        "imageUrl": "",
+        "hint": "Minuman hangat populer",
+        "difficulty": "easy"
+    },
+    {
+        "word": "MIE",
+        "emoji": "🍜",
+        "imageUrl": "",
+        "hint": "Makanan panjang yang diseduh",
+        "difficulty": "easy"
+    },
+    {
+        "word": "API",
+        "emoji": "🔥",
+        "imageUrl": "",
+        "hint": "Panas dan bercahaya",
+        "difficulty": "easy"
+    },
+    {
+        "word": "BOLA",
+        "emoji": "⚽",
+        "imageUrl": "",
+        "hint": "Digunakan untuk bermain",
+        "difficulty": "easy"
+    },
+    {
+        "word": "BUKU",
+        "emoji": "📚",
+        "imageUrl": "",
+        "hint": "Alat untuk membaca",
+        "difficulty": "easy"
+    },
+    {
+        "word": "ROTI",
+        "emoji": "🍞",
+        "imageUrl": "",
+        "hint": "Makanan dari tepung",
+        "difficulty": "easy"
+    },
+    {
+        "word": "AYAM",
+        "emoji": "🐔",
+        "imageUrl": "",
+        "hint": "Hewan yang berkokok",
+        "difficulty": "easy"
+    },
+    {
+        "word": "IKAN",
+        "emoji": "🐟",
+        "imageUrl": "",
+        "hint": "Hewan yang hidup di air",
+        "difficulty": "easy"
+    },
+    {
+        "word": "KUE",
+        "emoji": "🍰",
+        "imageUrl": "",
+        "hint": "Makanan manis untuk pesta",
+        "difficulty": "easy"
+    },
+    {
+        "word": "LAUT",
+        "emoji": "🌊",
+        "imageUrl": "",
+        "hint": "Perairan luas",
+        "difficulty": "easy"
+    },
+    {
+        "word": "HUJAN",
+        "emoji": "🌧️",
+        "imageUrl": "",
+        "hint": "Air yang turun dari langit",
+        "difficulty": "medium"
+    },
+    {
+        "word": "SALJU",
+        "emoji": "❄️",
+        "imageUrl": "",
+        "hint": "Bentuk air yang membeku",
+        "difficulty": "medium"
+    },
+    {
+        "word": "ANGIN",
+        "emoji": "💨",
+        "imageUrl": "",
+        "hint": "Udara yang bergerak",
+        "difficulty": "medium"
+    },
+    {
+        "word": "TOPI",
+        "emoji": "🎩",
+        "imageUrl": "",
+        "hint": "Dipakai di kepala",
+        "difficulty": "easy"
+    },
+    {
+        "word": "KAOS",
+        "emoji": "👕",
+        "imageUrl": "",
+        "hint": "Pakaian bagian atas",
+        "difficulty": "easy"
+    },
+    {
+        "word": "NASI",
+        "emoji": "🍚",
+        "imageUrl": "",
+        "hint": "Makanan pokok di Asia",
+        "difficulty": "easy"
+    },
+    {
+        "word": "KOPI",
+        "emoji": "☕",
+        "imageUrl": "",
+        "hint": "Minuman yang sering diminum pagi hari",
+        "difficulty": "easy"
+    },
+    {
+        "word": "KURSI",
+        "emoji": "🪑",
+        "imageUrl": "",
+        "hint": "Alat untuk duduk",
+        "difficulty": "medium"
+    },
+    {
+        "word": "PINTU",
+        "emoji": "🚪",
+        "imageUrl": "",
+        "hint": "Untuk masuk ke ruangan",
+        "difficulty": "medium"
+    },
+    {
+        "word": "AWAN",
+        "emoji": "☁️",
+        "imageUrl": "",
+        "hint": "Ada di langit",
+        "difficulty": "easy"
+    },
+    {
+        "word": "MOBIL",
+        "emoji": "🚗",
+        "imageUrl": "",
+        "hint": "Kendaraan roda empat",
+        "difficulty": "medium"
+    },
+    {
+        "word": "KAPAL",
+        "emoji": "🚢",
+        "imageUrl": "",
+        "hint": "Kendaraan di air",
+        "difficulty": "medium"
+    },
+    {
+        "word": "KUDA",
+        "emoji": "🐴",
+        "imageUrl": "",
+        "hint": "Hewan yang bisa ditunggangi",
+        "difficulty": "easy"
+    },
+    {
+        "word": "SAPI",
+        "emoji": "🐄",
+        "imageUrl": "",
+        "hint": "Hewan penghasil susu",
+        "difficulty": "easy"
+    },
+    {
+        "word": "APEL",
+        "emoji": "🍎",
+        "imageUrl": "",
+        "hint": "Buah berwarna merah",
+        "difficulty": "easy"
+    },
+    {
+        "word": "SUSU",
+        "emoji": "🥛",
+        "imageUrl": "",
+        "hint": "Minuman dari sapi",
+        "difficulty": "easy"
+    },
+    {
+        "word": "KAKI",
+        "emoji": "🦶",
+        "imageUrl": "",
+        "hint": "Untuk berjalan",
+        "difficulty": "easy"
+    },
+    {
+        "word": "HATI",
+        "emoji": "❤️",
+        "imageUrl": "",
+        "hint": "Simbol cinta",
+        "difficulty": "easy"
+    },
+    {
+        "word": "DOMPET",
+        "emoji": "👛",
+        "imageUrl": "",
+        "hint": "Tempat menyimpan uang",
+        "difficulty": "medium"
+    },
+    {
+        "word": "DAUN",
+        "emoji": "🍃",
+        "imageUrl": "",
+        "hint": "Bagian hijau dari tumbuhan",
+        "difficulty": "easy"
+    },
+    {
+        "word": "BATU",
+        "emoji": "🪨",
+        "imageUrl": "",
+        "hint": "Benda keras di tanah",
+        "difficulty": "easy"
+    },
+    {
+        "word": "PASIR",
+        "emoji": "🏖️",
+        "imageUrl": "",
+        "hint": "Banyak ditemukan di pantai",
+        "difficulty": "medium"
+    },
+    {
+        "word": "SINGA",
+        "emoji": "🦁",
+        "imageUrl": "",
+        "hint": "Raja hutan",
+        "difficulty": "medium"
+    },
+    {
+        "word": "ZEBRA",
+        "emoji": "🦓",
+        "imageUrl": "",
+        "hint": "Hewan bergaris hitam putih",
+        "difficulty": "medium"
+    },
+    {
+        "word": "PANDA",
+        "emoji": "🐼",
+        "imageUrl": "",
+        "hint": "Hewan hitam putih penyuka bambu",
+        "difficulty": "medium"
+    },
+    {
+        "word": "TAMAN",
+        "emoji": "🏞️",
+        "imageUrl": "",
+        "hint": "Tempat bermain dan berjalan",
+        "difficulty": "medium"
+    },
+    {
+        "word": "PASAR",
+        "emoji": "🛒",
+        "imageUrl": "",
+        "hint": "Tempat membeli bahan makanan",
+        "difficulty": "medium"
+    },
+    {
+        "word": "LARI",
+        "emoji": "🏃",
+        "imageUrl": "",
+        "hint": "Bergerak cepat",
+        "difficulty": "easy"
+    },
+    {
+        "word": "TIDUR",
+        "emoji": "😴",
+        "imageUrl": "",
+        "hint": "Dilakukan saat lelah",
+        "difficulty": "medium"
+    },
+    {
+        "word": "MAKAN",
+        "emoji": "🍽️",
+        "imageUrl": "",
+        "hint": "Kegiatan untuk mengisi perut",
+        "difficulty": "medium"
+    },
+    {
+        "word": "BUNGA",
+        "emoji": "🌸",
+        "imageUrl": "",
+        "hint": "Bagian indah dari tumbuhan",
+        "difficulty": "medium"
+    },
+    {
+        "word": "POHON",
+        "emoji": "🌳",
+        "imageUrl": "",
+        "hint": "Tumbuhan besar",
+        "difficulty": "medium"
+    },
+    {
+        "word": "BULAN",
+        "emoji": "🌙",
+        "imageUrl": "",
+        "hint": "Benda langit di malam hari",
+        "difficulty": "medium"
+    },
+    {
+        "word": "BINTANG",
+        "emoji": "⭐",
+        "imageUrl": "",
+        "hint": "Benda langit yang berkelap-kelip",
+        "difficulty": "hard"
+    },
+    {
+        "word": "BUS",
+        "emoji": "🚌",
+        "imageUrl": "",
+        "hint": "Kendaraan umum besar",
+        "difficulty": "easy"
+    },
+    {
+        "word": "PIZZA",
+        "emoji": "🍕",
+        "imageUrl": "",
+        "hint": "Makanan bundar dari Italia",
+        "difficulty": "medium"
+    },
+    {
+        "word": "KEJU",
+        "emoji": "🧀",
+        "imageUrl": "",
+        "hint": "Produk susu yang berwarna kuning",
+        "difficulty": "easy"
+    },
+    {
+        "word": "BAKSO",
+        "emoji": "🍲",
+        "imageUrl": "",
+        "hint": "Makanan bulat yang disajikan dalam kuah",
+        "difficulty": "medium"
+    },
+    {
+        "word": "SENDOK",
+        "emoji": "🥄",
+        "imageUrl": "",
+        "hint": "Alat untuk menyendok",
+        "difficulty": "medium"
+    },
+    {
+        "word": "GARPU",
+        "emoji": "🍴",
+        "imageUrl": "",
+        "hint": "Alat makan dengan gigi",
+        "difficulty": "medium"
+    },
+    {
+        "word": "PISAU",
+        "emoji": "🔪",
+        "imageUrl": "",
+        "hint": "Alat untuk memotong",
+        "difficulty": "medium"
+    },
+    {
+        "word": "LAMPU",
+        "emoji": "💡",
+        "imageUrl": "",
+        "hint": "Sumber cahaya di rumah",
+        "difficulty": "medium"
+    },
+    {
+        "word": "PAYUNG",
+        "emoji": "☂️",
+        "imageUrl": "",
+        "hint": "Untuk melindungi dari hujan",
+        "difficulty": "medium"
+    },
+    {
+        "word": "JERUK",
+        "emoji": "🍊",
+        "imageUrl": "",
+        "hint": "Buah yang asam manis",
+        "difficulty": "medium"
+    },
+    {
+        "word": "TELUR",
+        "emoji": "🥚",
+        "imageUrl": "",
+        "hint": "Makanan dari ayam",
+        "difficulty": "medium"
+    },
+    {
+        "word": "GARAM",
+        "emoji": "🧂",
+        "imageUrl": "",
+        "hint": "Bumbu dapur berasa asin",
+        "difficulty": "medium"
+    },
+    {
+        "word": "GUNUNG",
+        "emoji": "⛰️",
+        "imageUrl": "",
+        "hint": "Tanah yang sangat tinggi",
+        "difficulty": "medium"
+    },
+    {
+        "word": "SEPATU",
+        "emoji": "👟",
+        "imageUrl": "",
+        "hint": "Dipakai di kaki",
+        "difficulty": "medium"
+    },
+    {
+        "word": "CELANA",
+        "emoji": "👖",
+        "imageUrl": "",
+        "hint": "Pakaian bagian bawah",
+        "difficulty": "medium"
+    },
+    {
+        "word": "TELEPON",
+        "emoji": "📱",
+        "imageUrl": "",
+        "hint": "Alat untuk berkomunikasi",
+        "difficulty": "hard"
+    },
+    {
+        "word": "KAMERA",
+        "emoji": "📷",
+        "imageUrl": "",
+        "hint": "Untuk mengambil foto",
+        "difficulty": "medium"
+    },
+    {
+        "word": "LAPTOP",
+        "emoji": "💻",
+        "imageUrl": "",
+        "hint": "Perangkat untuk bekerja",
+        "difficulty": "medium"
+    },
+    {
+        "word": "TELEVISI",
+        "emoji": "📺",
+        "imageUrl": "",
+        "hint": "Untuk menonton",
+        "difficulty": "hard"
+    },
+    {
+        "word": "ES KRIM",
+        "emoji": "🍨",
+        "imageUrl": "",
+        "hint": "Makanan dingin dan manis",
+        "difficulty": "medium"
+    },
+    {
+        "word": "PISANG",
+        "emoji": "🍌",
+        "imageUrl": "",
+        "hint": "Buah berwarna kuning",
+        "difficulty": "medium"
+    },
+    {
+        "word": "PENSIL",
+        "emoji": "✏️",
+        "imageUrl": "",
+        "hint": "Alat untuk menulis",
+        "difficulty": "medium"
+    },
+    {
+        "word": "RUMAH",
+        "emoji": "🏠",
+        "imageUrl": "",
+        "hint": "Tempat tinggal",
+        "difficulty": "medium"
+    },
+    {
+        "word": "JENDELA",
+        "emoji": "🪟",
+        "imageUrl": "",
+        "hint": "Untuk melihat keluar",
+        "difficulty": "hard"
+    },
+    {
+        "word": "KUCING",
+        "emoji": "🐱",
+        "imageUrl": "",
+        "hint": "Hewan peliharaan yang suka mengeong",
+        "difficulty": "medium"
+    },
+    {
+        "word": "ANJING",
+        "emoji": "🐕",
+        "imageUrl": "",
+        "hint": "Sahabat manusia",
+        "difficulty": "medium"
+    },
+    {
+        "word": "MATAHARI",
+        "emoji": "☀️",
+        "imageUrl": "",
+        "hint": "Sumber cahaya di siang hari",
+        "difficulty": "hard"
+    },
+    {
+        "word": "SEPEDA",
+        "emoji": "🚲",
+        "imageUrl": "",
+        "hint": "Kendaraan roda dua",
+        "difficulty": "medium"
+    },
+    {
+        "word": "PESAWAT",
+        "emoji": "✈️",
+        "imageUrl": "",
+        "hint": "Kendaraan di udara",
+        "difficulty": "hard"
+    },
+    {
+        "word": "BEBEK",
+        "emoji": "🦆",
+        "imageUrl": "",
+        "hint": "Hewan yang berenang di kolam",
+        "difficulty": "medium"
+    },
+    {
+        "word": "GAJAH",
+        "emoji": "🐘",
+        "imageUrl": "",
+        "hint": "Hewan besar dengan belalai",
+        "difficulty": "medium"
+    },
+    {
+        "word": "BURUNG",
+        "emoji": "🐦",
+        "imageUrl": "",
+        "hint": "Hewan yang bisa terbang",
+        "difficulty": "medium"
+    },
+    {
+        "word": "KELINCI",
+        "emoji": "🐰",
+        "imageUrl": "",
+        "hint": "Hewan kecil yang suka wortel",
+        "difficulty": "hard"
+    },
+    {
+        "word": "TANGAN",
+        "emoji": "✋",
+        "imageUrl": "",
+        "hint": "Untuk memegang",
+        "difficulty": "medium"
+    },
+    {
+        "word": "PELANGI",
+        "emoji": "🌈",
+        "imageUrl": "",
+        "hint": "Warna-warni setelah hujan",
+        "difficulty": "hard"
+    },
+    {
+        "word": "KUNCI",
+        "emoji": "🔑",
+        "imageUrl": "",
+        "hint": "Untuk membuka pintu",
+        "difficulty": "medium"
+    },
+    {
+        "word": "KOMPUTER",
+        "emoji": "💻",
+        "imageUrl": "",
+        "hint": "Alat untuk bekerja",
+        "difficulty": "hard"
+    },
+    {
+        "word": "MUSIK",
+        "emoji": "🎵",
+        "imageUrl": "",
+        "hint": "Bunyi yang merdu",
+        "difficulty": "medium"
+    },
+    {
+        "word": "HADIAH",
+        "emoji": "🎁",
+        "imageUrl": "",
+        "hint": "Bingkisan untuk orang lain",
+        "difficulty": "medium"
+    },
+    {
+        "word": "KERETA",
+        "emoji": "🚂",
+        "imageUrl": "",
+        "hint": "Kendaraan di rel",
+        "difficulty": "medium"
+    },
+    {
+        "word": "SEMANGKA",
+        "emoji": "🍉",
+        "imageUrl": "",
+        "hint": "Buah besar dengan daging merah",
+        "difficulty": "hard"
+    },
+    {
+        "word": "ANGGUR",
+        "emoji": "🍇",
+        "imageUrl": "",
+        "hint": "Buah kecil yang tumbuh bergerombol",
+        "difficulty": "medium"
+    },
+    {
+        "word": "KACAMATA",
+        "emoji": "👓",
+        "imageUrl": "",
+        "hint": "Dipakai untuk melihat lebih jelas",
+        "difficulty": "hard"
+    },
+    {
+        "word": "COKELAT",
+        "emoji": "🍫",
+        "imageUrl": "",
+        "hint": "Makanan manis berwarna coklat",
+        "difficulty": "hard"
+    },
+    {
+        "word": "JAGUNG",
+        "emoji": "🌽",
+        "imageUrl": "",
+        "hint": "Tanaman berwarna kuning",
+        "difficulty": "medium"
+    },
+    {
+        "word": "HARIMAU",
+        "emoji": "🐅",
+        "imageUrl": "",
+        "hint": "Hewan belang yang buas",
+        "difficulty": "hard"
+    },
+    {
+        "word": "SEKOLAH",
+        "emoji": "🏫",
+        "imageUrl": "",
+        "hint": "Tempat untuk belajar",
+        "difficulty": "hard"
+    },
+    {
+        "word": "KUPU",
+        "emoji": "🦋",
+        "imageUrl": "",
+        "hint": "Serangga yang indah",
+        "difficulty": "easy"
+    },
+    {
+        "word": "PIR",
+        "emoji": "🍐",
+        "imageUrl": "",
+        "hint": "Buah hijau manis",
+        "difficulty": "easy"
+    },
+    {
+        "word": "SUP",
+        "emoji": "🥣",
+        "imageUrl": "",
+        "hint": "Makanan berkuah",
+        "difficulty": "easy"
+    },
+    {
+        "word": "BULU",
+        "emoji": "🪶",
+        "imageUrl": "",
+        "hint": "Bagian lembut dari burung",
+        "difficulty": "easy"
+    },
+    {
+        "word": "KACA",
+        "emoji": "🪟",
+        "imageUrl": "",
+        "hint": "Benda bening untuk melihat",
+        "difficulty": "easy"
+    },
+    {
+        "word": "BUSA",
+        "emoji": "🫧",
+        "imageUrl": "",
+        "hint": "Banyak saat mencuci",
+        "difficulty": "easy"
+    },
+    {
+        "word": "KULI",
+        "emoji": "💪",
+        "imageUrl": "",
+        "hint": "Pekerja angkut barang",
+        "difficulty": "easy"
+    },
+    {
+        "word": "TALI",
+        "emoji": "🧵",
+        "imageUrl": "",
+        "hint": "Untuk mengikat",
+        "difficulty": "easy"
+    },
+    {
+        "word": "NINI",
+        "emoji": "👵",
+        "imageUrl": "",
+        "hint": "Nenek dalam Sunda",
+        "difficulty": "easy"
+    },
+    {
+        "word": "JARI",
+        "emoji": "✋",
+        "imageUrl": "",
+        "hint": "Bagian dari tangan",
+        "difficulty": "easy"
+    },
+    {
+        "word": "DASI",
+        "emoji": "👔",
+        "imageUrl": "",
+        "hint": "Pakaian yang ditaruh di leher",
+        "difficulty": "easy"
+    },
+    {
+        "word": "GIGI",
+        "emoji": "🦷",
+        "imageUrl": "",
+        "hint": "Tulang keras kecil berwarna putih di mulut untuk mengunyah/menggigit",
+        "difficulty": "easy"
+    },
+    {
+        "word": "IBU",
+        "emoji": "👩",
+        "imageUrl": "",
+        "hint": "Orang tua perempuan",
+        "difficulty": "easy"
+    },
+    {
+        "word": "GURU",
+        "emoji": "👨‍🏫",
+        "imageUrl": "",
+        "hint": "Pengajar di sekolah",
+        "difficulty": "easy"
+    },
+    {
+        "word": "GULA",
+        "emoji": "🍬",
+        "imageUrl": "",
+        "hint": "Bahan manis",
+        "difficulty": "easy"
+    },
+    {
+        "word": "MUKA",
+        "emoji": "🙂",
+        "imageUrl": "",
+        "hint": "Bagian depan kepala",
+        "difficulty": "easy"
+    },
+    {
+        "word": "KEMBANG",
+        "emoji": "🌱",
+        "imageUrl": "",
+        "hint": "Tanaman tumbuh menjadi besar",
+        "difficulty": "hard"
+    }
+]

@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, shrink-to-fit=no, viewport-fit=cover" />
+  <meta name="format-detection" content="telephone=no, date=no, email=no, address=no" />
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Math Games</title>
+  <meta name="description" content="A playful upgraded math game for early learners: themes, mascot, streaks, music, rewards, achievements." />
+  <!-- Google Font: Quicksand -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-theme="lavender-fields">
+  <div class="wrap">
+    <div class="game-card" role="application" aria-label="Math Fun Game">
+      <header>
+        <div style="display:flex;align-items:center;gap:12px">
+          <h1>Math Games</h1>
+        </div>
+
+        <div class="controls">
+          <button class="btn ghost" id="backToMenuBtn" title="Back to Main Menu">🏠 Menu</button>
+          <button class="btn ghost" id="soundToggle" aria-pressed="true" title="Toggle sound effects">🔊 Sound</button>
+          <button class="btn ghost" id="musicToggle" aria-pressed="false" title="Toggle background music">🎵 Music</button>
+          <button class="btn ghost" id="learningToggle" aria-pressed="false">📖 Learning Mode</button>
+          <button class="btn ghost" id="pauseBtn" style="display:none">⏸ Pause</button>
+          <button class="btn" id="startBtn" style="background:var(--accent);color:white">🚀 Start</button>
+        </div>
+      </header>
+
+      <div class="top-row">
+        <!-- Mascot Panel -->
+        <div class="panel mascot-panel">
+          <div class="mascot" id="mascot" aria-hidden="true">
+            <!-- inline svg mascot, faces will be toggled via JS -->
+            <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" id="mascotSvg">
+              <defs>
+                <linearGradient id="g1" x1="0" x2="1">
+                  <stop offset="0" stop-color="#fff" stop-opacity="0.9"/>
+                  <stop offset="1" stop-color="#fff" stop-opacity="0.6"/>
+                </linearGradient>
+              </defs>
+              <rect width="120" height="120" rx="14" fill="url(#g1)" />
+              <g id="face" transform="translate(10,16)">
+                <circle cx="50" cy="34" r="30" fill="#ffd166" stroke="#f59e0b" stroke-width="2" />
+                <g id="eyes">
+                  <circle cx="36" cy="28" r="4" fill="#222" />
+                  <circle cx="64" cy="28" r="4" fill="#222" />
+                </g>
+                <g id="mouth">
+                  <path d="M36,46 Q50,60 64,46" stroke="#222" stroke-width="3" fill="none" stroke-linecap="round" />
+                </g>
+              </g>
+            </svg>
+          </div>
+          <div class="mini mascot-description">Mascot reacts to your answers!</div>
+        </div>
+
+        <!-- Game Settings Panel -->
+        <div class="panel settings-panel">
+          <div class="settings-section">
+            <div class="section-label">Difficulty Level</div>
+            <div class="settings-group">
+              <div class="option active" data-difficulty="easy">😊 Easy</div>
+              <div class="option" data-difficulty="medium">😎 Medium</div>
+              <div class="option" data-difficulty="hard">🔥 Hard</div>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <div class="section-label">Operation Mode</div>
+            <div class="settings-group">
+              <div class="option active" data-mode="mixed">➕➖ Mixed</div>
+              <div class="option" data-mode="addition">➕ Add</div>
+              <div class="option" data-mode="subtraction">➖ Sub</div>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <div class="section-label">Answer Mode</div>
+            <div class="settings-group">
+              <div class="option active" data-answer-mode="choice">🔘 Multiple Choice</div>
+              <div class="option" data-answer-mode="input">⌨️ Type Answer</div>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <div class="section-label">Theme</div>
+            <div class="theme-picker">
+              <div class="theme" data-theme="lavender-fields">🦋</div>
+              <div class="theme" data-theme="hydrangea">🌸</div>
+              <div class="theme" data-theme="lush-forest">🌲</div>
+              <div class="theme" data-theme="stormy-morning">⛈️</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stats Panel -->
+        <div class="panel stats-panel">
+          <div class="section-label">Game Stats</div>
+          <div class="stats-grid">
+            <div class="stat-item">
+              <div class="stat-icon" data-tooltip="Your total score - earn points for correct answers!">🏆</div>
+              <div class="stat-content">
+                <div class="stat-label">Score</div>
+                <div class="stat-value" id="score">0</div>
+              </div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-icon" data-tooltip="Wrong answers - game ends after 5 wrong">❌</div>
+              <div class="stat-content">
+                <div class="stat-label">Wrong</div>
+                <div class="stat-value" id="wrong">0</div>
+              </div>
+            </div>
+            <div class="stat-item timer-stat">
+              <div class="stat-icon" data-tooltip="Time remaining - earn bonus time with correct answers!">⏱</div>
+              <div class="stat-content">
+                <div class="stat-label">Time</div>
+                <div class="stat-value" id="time">60</div>
+                <div class="timer-progress-bar">
+                  <div class="timer-progress-fill" id="timerProgress"></div>
+                </div>
+              </div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-icon" data-tooltip="Current question number">📝</div>
+              <div class="stat-content">
+                <div class="stat-label">Q</div>
+                <div class="stat-value" id="qnum">0</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="game-area">
+        <div class="left">
+          <div class="question-card">
+            <div class="question" id="question">
+              <div class="q-row q-top">
+                <span class="q-spacer"></span>
+                <span id="q-top" class="q-number"></span>
+              </div>
+              <div class="q-row q-bottom">
+                <span id="q-op" class="q-operator">+</span>
+                <span id="q-bottom-number" class="q-number"></span>
+              </div>
+              <div class="q-line"></div>
+            </div>
+            <div class="answers" id="answers">
+              <button class="answer" data-index="0" tabindex="-1">0</button>
+              <button class="answer" data-index="1" tabindex="-1">0</button>
+              <button class="answer" data-index="2" tabindex="-1">0</button>
+              <button class="answer" data-index="3" tabindex="-1">0</button>
+            </div>
+            <div class="answer-input-container" id="answerInputContainer" style="display: none;">
+              <input type="number" 
+                     id="answerInput" 
+                     class="answer-input" 
+                     placeholder="Type your answer..." 
+                     tabindex="-1"
+                     inputmode="numeric"
+                     autocomplete="off" />
+              <button class="submit-btn" id="submitBtn" tabindex="-1">
+                ✓ Submit
+              </button>
+            </div>
+            <div class="feedback" id="feedback">Welcome! Press Start to play.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="reward-popup" id="rewardPopup" role="dialog" aria-live="assertive"></div>
+    
+    <!-- Pause Screen -->
+    <div class="pause-overlay" id="pauseOverlay">
+      <div class="pause-content">
+        <div class="pause-emoji">⏸️</div>
+        <h2 class="pause-title">Game Paused</h2>
+        <p class="pause-subtitle">Take a break! Click Resume when ready.</p>
+        <div class="pause-actions">
+          <button class="btn btn-large btn-primary" id="resumeBtn">▶️ Resume Game</button>
+          <button class="btn btn-large ghost" id="pauseChangeSettingsBtn">⚙️ Change Settings</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Final Score Screen -->
+    <div class="score-screen" id="scoreScreen" role="dialog" aria-label="Game Over">
+      <div class="score-screen-content">
+        <div class="score-header">
+          <div class="score-emoji" id="scoreEmoji">🎉</div>
+          <h2 class="score-title" id="scoreTitle">Game Over!</h2>
+          <div class="score-subtitle" id="scoreSubtitle">Time's Up!</div>
+        </div>
+        
+        <div class="score-main">
+          <div class="final-score">
+            <div class="final-score-label">Final Score</div>
+            <div class="final-score-value" id="finalScore">0</div>
+            <div class="high-score-badge" id="highScoreBadge">🏆 New High Score!</div>
+          </div>
+        </div>
+        
+        <div class="score-breakdown">
+          <div class="breakdown-title">📊 Game Statistics</div>
+          <div class="breakdown-grid">
+            <div class="breakdown-item">
+              <div class="breakdown-icon">✅</div>
+              <div class="breakdown-content">
+                <div class="breakdown-label">Correct Answers</div>
+                <div class="breakdown-value" id="correctAnswers">0</div>
+              </div>
+            </div>
+            <div class="breakdown-item">
+              <div class="breakdown-icon">❌</div>
+              <div class="breakdown-content">
+                <div class="breakdown-label">Wrong Answers</div>
+                <div class="breakdown-value" id="wrongAnswers">0</div>
+              </div>
+            </div>
+            <div class="breakdown-item">
+              <div class="breakdown-icon">🎯</div>
+              <div class="breakdown-content">
+                <div class="breakdown-label">Accuracy</div>
+                <div class="breakdown-value" id="accuracy">0%</div>
+              </div>
+            </div>
+            <div class="breakdown-item">
+              <div class="breakdown-icon">⚡</div>
+              <div class="breakdown-content">
+                <div class="breakdown-label">Avg. Speed</div>
+                <div class="breakdown-value" id="avgSpeed">0s</div>
+              </div>
+            </div>
+            <div class="breakdown-item">
+              <div class="breakdown-icon">🔥</div>
+              <div class="breakdown-content">
+                <div class="breakdown-label">Best Streak</div>
+                <div class="breakdown-value" id="bestStreak">0</div>
+              </div>
+            </div>
+            <div class="breakdown-item">
+              <div class="breakdown-icon">📝</div>
+              <div class="breakdown-content">
+                <div class="breakdown-label">Total Questions</div>
+                <div class="breakdown-value" id="totalQuestions">0</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="score-actions">
+          <button class="btn btn-large btn-primary" id="playAgainBtn">🔄 Play Again</button>
+          <button class="btn btn-large btn-ghost" id="changeSettingsBtn">⚙️ Change Settings</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Viewport lock - prevent any zoom changes
+    (function() {
+      const viewport = document.querySelector('meta[name="viewport"]');
+      const resetViewport = () => {
+        viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, shrink-to-fit=no, viewport-fit=cover');
+      };
+      window.addEventListener('resize', resetViewport);
+      window.addEventListener('orientationchange', resetViewport);
+      document.addEventListener('touchstart', function(e) {
+        if (e.touches.length > 1) {
+          e.preventDefault();
+        }
+      }, { passive: false });
+    })();
+  </script>
+  <script src="game.js"></script>
+</body>
+</html>

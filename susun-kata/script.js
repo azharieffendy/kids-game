@@ -1,0 +1,1291 @@
+// Game State
+let wordBuildingContent = [];
+let currentLevel = 0;
+let currentWord = null;
+let selectedLetters = [];
+let availableLetters = [];
+let usedQuestions = [];
+let shuffledQuestions = [];
+let soundEnabled = true;
+let musicEnabled = false;
+let backgroundMusic = null;
+let currentDifficulty = null;
+let currentSoundTheme = 'fun'; // fun, calm, exciting
+let currentVisualTheme = 'default'; // default, cotton-candy, ocean, sunset, forest
+let gameStats = {
+    correct: 0,
+    wrong: 0,
+    total: 0
+};
+let totalQuestionsInSession = 0;
+let completedQuestionsInSession = 0;
+
+// Initialize
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadQuestions();
+    loadProgress();
+    loadSoundSettings();
+    updateSoundThemeSelector();
+    updateVisualThemeSelector();
+    updateDifficultyDisplay();
+    applyVisualTheme();
+    initBackgroundMusic();
+});
+
+// Load questions from localStorage or JSON file
+async function loadQuestions() {
+    // Load from questions.json file only (requires web server)
+    try {
+        const response = await fetch('questions.json');
+        if (response.ok) {
+            const data = await response.json();
+            
+            // Check if JSON is empty or invalid
+            if (!data || !Array.isArray(data) || data.length === 0) {
+                console.error('questions.json is empty or invalid');
+                wordBuildingContent = getDefaultQuestions();
+            } else {
+                wordBuildingContent = data;
+                console.log('Loaded questions from JSON file. Total questions:', wordBuildingContent.length);
+            }
+        } else {
+            console.error('Failed to load questions.json (status:', response.status, ')');
+            wordBuildingContent = getDefaultQuestions();
+        }
+    } catch (error) {
+        console.error('Error loading questions.json:', error);
+        console.log('TIP: Use a local web server (Live Server, http-server, python -m http.server)');
+        wordBuildingContent = getDefaultQuestions();
+    }
+}
+
+// Minimal fallback (only 3 questions - requires questions.json to work properly)
+function getDefaultQuestions() {
+    return [
+        { word: 'MEJA', emoji: '📖', imageUrl: '', hint: 'Tempat untuk belajar', difficulty: 'easy' },
+        { word: 'KURSI', emoji: '🪑', imageUrl: '', hint: 'Alat untuk duduk', difficulty: 'easy' },
+        { word: 'BUKU', emoji: '📚', imageUrl: '', hint: 'Alat untuk membaca', difficulty: 'easy' }
+    ];
+}
+
+// Save custom questions to localStorage
+function saveCustomQuestions() {
+    try {
+        localStorage.setItem('customQuestions', JSON.stringify(wordBuildingContent));
+    } catch (e) {
+        console.warn('Cannot save custom questions to localStorage:', e);
+        alert('Cannot save questions. Storage may be full or disabled.');
+    }
+}
+
+// Load saved progress
+function loadProgress() {
+    const savedStats = localStorage.getItem('gameStats');
+    if (savedStats) {
+        try {
+            gameStats = JSON.parse(savedStats);
+        } catch (e) {
+            console.error('Error loading stats:', e);
+        }
+    }
+}
+
+// Load sound settings
+function loadSoundSettings() {
+    try {
+        const saved = localStorage.getItem('soundEnabled');
+        if (saved !== null) {
+            soundEnabled = saved === 'true';
+        }
+
+        const savedMusic = localStorage.getItem('musicEnabled');
+        if (savedMusic !== null) {
+            musicEnabled = savedMusic === 'true';
+        }
+
+        const savedTheme = localStorage.getItem('soundTheme');
+        if (savedTheme) {
+            currentSoundTheme = savedTheme;
+        }
+
+        const savedVisualTheme = localStorage.getItem('visualTheme');
+        if (savedVisualTheme) {
+            currentVisualTheme = savedVisualTheme;
+        }
+    } catch (e) {
+        console.warn('Cannot load sound settings from localStorage:', e);
+        // Use default values
+        soundEnabled = true;
+        musicEnabled = false;
+        currentSoundTheme = 'fun';
+        currentVisualTheme = 'default';
+    }
+}
+
+// Save sound settings
+function saveSoundSettings() {
+    try {
+        localStorage.setItem('soundEnabled', soundEnabled.toString());
+        localStorage.setItem('musicEnabled', musicEnabled.toString());
+        localStorage.setItem('soundTheme', currentSoundTheme);
+        localStorage.setItem('visualTheme', currentVisualTheme);
+    } catch (e) {
+        console.warn('Cannot save sound settings to localStorage:', e);
+        alert('Cannot save settings. Storage may be full or disabled.');
+    }
+}
+
+// Toggle sound on/off
+function toggleSound() {
+    soundEnabled = !soundEnabled;
+    saveSoundSettings();
+    updateSoundButton();
+}
+
+// Update sound button display
+function updateSoundButton() {
+    const soundBtn = document.getElementById('soundToggle');
+    if (soundBtn) {
+        soundBtn.textContent = soundEnabled ? '🔊' : '🔇';
+        soundBtn.title = soundEnabled ? 'Matikan suara' : 'Hidupkan suara';
+    }
+}
+
+// Initialize background music
+function initBackgroundMusic() {
+    if (!backgroundMusic) {
+        backgroundMusic = new Audio();
+        backgroundMusic.loop = true;
+        backgroundMusic.volume = 0.3;
+
+        // Create a simple pleasant background music using Web Audio API
+        createBackgroundMusicTrack();
+    }
+    updateMusicButton();
+}
+
+// Create background music track using Web Audio API
+function createBackgroundMusicTrack() {
+    // We'll use a simple melody pattern that loops
+    // For now, we'll just handle the toggle - you can add actual music file later
+    // backgroundMusic.src = 'audio/background-music.mp3';
+}
+
+// Toggle music on/off
+function toggleMusic() {
+    musicEnabled = !musicEnabled;
+    saveSoundSettings();
+    updateMusicButton();
+
+    if (musicEnabled) {
+        playBackgroundMusic();
+    } else {
+        stopBackgroundMusic();
+    }
+}
+
+// Update music button display
+function updateMusicButton() {
+    const musicBtn = document.getElementById('musicToggle');
+    if (musicBtn) {
+        musicBtn.textContent = musicEnabled ? '🎵' : '🎶';
+        musicBtn.title = musicEnabled ? 'Matikan musik' : 'Hidupkan musik';
+    }
+}
+
+// Play background music
+function playBackgroundMusic() {
+    if (backgroundMusic && musicEnabled) {
+        // Generate soft background music using Web Audio API
+        playGeneratedBackgroundMusic();
+    }
+}
+
+// Stop background music
+function stopBackgroundMusic() {
+    // Stop HTML5 Audio
+    if (backgroundMusic) {
+        backgroundMusic.pause();
+        backgroundMusic.currentTime = 0;
+    }
+    
+    // Stop Web Audio API music with proper cleanup
+    if (window.musicContext) {
+        try {
+            // Close all nodes and disconnect
+            window.musicContext.close();
+        } catch (e) {
+            console.warn('Error closing audio context:', e);
+        }
+        window.musicContext = null;
+    }
+}
+
+// Generate pleasant background music using Web Audio API
+function playGeneratedBackgroundMusic() {
+    if (!musicEnabled) return;
+
+    // Stop any existing music
+    if (window.musicContext) {
+        window.musicContext.close();
+    }
+
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    window.musicContext = audioContext;
+
+    // Create a simple, pleasant melody loop
+    const notes = [
+        { freq: 523.25, time: 0, duration: 0.5 },    // C5
+        { freq: 587.33, time: 0.5, duration: 0.5 },  // D5
+        { freq: 659.25, time: 1, duration: 0.5 },    // E5
+        { freq: 783.99, time: 1.5, duration: 0.5 },  // G5
+        { freq: 659.25, time: 2, duration: 0.5 },    // E5
+        { freq: 587.33, time: 2.5, duration: 0.5 },  // D5
+        { freq: 523.25, time: 3, duration: 1 },      // C5
+    ];
+
+    function playMelody() {
+        if (!musicEnabled) return;
+
+        notes.forEach(note => {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            oscillator.frequency.value = note.freq;
+            oscillator.type = 'sine';
+
+            gainNode.gain.setValueAtTime(0, audioContext.currentTime + note.time);
+            gainNode.gain.linearRampToValueAtTime(0.08, audioContext.currentTime + note.time + 0.05);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + note.time + note.duration);
+
+            oscillator.start(audioContext.currentTime + note.time);
+            oscillator.stop(audioContext.currentTime + note.time + note.duration);
+        });
+
+        // Loop the melody
+        if (musicEnabled) {
+            setTimeout(playMelody, 4000);
+        }
+    }
+
+    playMelody();
+}
+
+// Change sound theme
+function changeSoundTheme(theme) {
+    currentSoundTheme = theme;
+    saveSoundSettings();
+    
+    // Play a preview sound of the new theme
+    if (soundEnabled) {
+        playCorrectSound();
+    }
+}
+
+// Update sound theme selector
+function updateSoundThemeSelector() {
+    const themeSelect = document.getElementById('soundTheme');
+    if (themeSelect) {
+        themeSelect.value = currentSoundTheme;
+    }
+}
+
+// Change visual theme
+function changeVisualTheme(theme) {
+    currentVisualTheme = theme;
+    saveSoundSettings();
+    applyVisualTheme();
+}
+
+// Apply visual theme
+function applyVisualTheme() {
+    const body = document.body;
+
+    // Remove all theme classes
+    body.classList.remove('cotton-candy-theme', 'ocean-theme', 'sunset-theme', 'forest-theme');
+
+    // Add current theme class
+    if (currentVisualTheme === 'cotton-candy') {
+        body.classList.add('cotton-candy-theme');
+    } else if (currentVisualTheme === 'ocean') {
+        body.classList.add('ocean-theme');
+    } else if (currentVisualTheme === 'sunset') {
+        body.classList.add('sunset-theme');
+    } else if (currentVisualTheme === 'forest') {
+        body.classList.add('forest-theme');
+    }
+}
+
+// Update visual theme selector
+function updateVisualThemeSelector() {
+    const themeSelect = document.getElementById('visualTheme');
+    if (themeSelect) {
+        themeSelect.value = currentVisualTheme;
+    }
+}
+
+// Update difficulty display in header
+function updateDifficultyDisplay() {
+    const homeButton = document.getElementById('homeButton');
+    const selectorContainer = document.getElementById('difficultySelectorContainer');
+    const difficultySelector = document.getElementById('difficultySelector');
+    
+    if (currentDifficulty) {
+        // Show home button and difficulty selector
+        if (homeButton) homeButton.style.display = 'inline-flex';
+        if (selectorContainer) selectorContainer.style.display = 'flex';
+        if (difficultySelector) difficultySelector.value = currentDifficulty;
+    } else {
+        // Hide controls on start screen
+        if (homeButton) homeButton.style.display = 'none';
+        if (selectorContainer) selectorContainer.style.display = 'none';
+    }
+}
+
+// Change difficulty during gameplay
+function changeDifficulty(newDifficulty) {
+    if (newDifficulty === currentDifficulty) return;
+    
+    // Show custom confirmation dialog
+    const difficultyNames = {
+        'easy': 'Mudah (3-4 huruf)',
+        'medium': 'Sedang (5-6 huruf)',
+        'hard': 'Sulit (7+ huruf)'
+    };
+    
+    const difficultyEmojis = {
+        'easy': '😊',
+        'medium': '🤔',
+        'hard': '🧠'
+    };
+    
+    showDifficultyChangeDialog(newDifficulty, difficultyNames[newDifficulty], difficultyEmojis[newDifficulty]);
+}
+
+// Show custom difficulty change dialog
+function showDifficultyChangeDialog(newDifficulty, difficultyName, emoji) {
+    const dialog = document.createElement('div');
+    dialog.className = 'difficulty-dialog-overlay';
+    dialog.innerHTML = `
+        <div class="difficulty-dialog">
+            <div class="difficulty-dialog-content">
+                <div class="difficulty-emoji">${emoji}</div>
+                <h3>Ganti Tingkat Kesulitan?</h3>
+                <p>Pindah ke tingkat <strong>${difficultyName}</strong></p>
+                <p class="difficulty-warning">⚠️ Progres saat ini akan direset</p>
+                <div class="difficulty-dialog-buttons">
+                    <button class="difficulty-cancel-btn" onclick="closeDifficultyDialog()">Batal</button>
+                    <button class="difficulty-confirm-btn" onclick="confirmDifficultyChange('${newDifficulty}')">Ya, Ganti</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(dialog);
+    
+    // Add enter key support
+    document.addEventListener('keydown', handleDifficultyDialogKey);
+}
+
+// Close difficulty change dialog
+function closeDifficultyDialog() {
+    const dialog = document.querySelector('.difficulty-dialog-overlay');
+    if (dialog) {
+        dialog.remove();
+        document.removeEventListener('keydown', handleDifficultyDialogKey);
+        // Revert selector back to current difficulty
+        document.getElementById('difficultySelector').value = currentDifficulty;
+    }
+}
+
+// Confirm difficulty change
+function confirmDifficultyChange(newDifficulty) {
+    closeDifficultyDialog();
+    startGame(newDifficulty);
+}
+
+// Handle keyboard events for difficulty dialog
+function handleDifficultyDialogKey(event) {
+    if (event.key === 'Escape') {
+        closeDifficultyDialog();
+    } else if (event.key === 'Enter') {
+        const dialog = document.querySelector('.difficulty-dialog-overlay');
+        if (dialog) {
+            const confirmBtn = dialog.querySelector('.difficulty-confirm-btn');
+            if (confirmBtn) {
+                const difficulty = confirmBtn.getAttribute('onclick').match(/'([^']+)'/)[1];
+                confirmDifficultyChange(difficulty);
+            }
+        }
+    }
+}
+
+// Update statistics display
+function updateStatsDisplay() {
+    const statsContainer = document.getElementById('statsDisplay');
+    if (statsContainer) {
+        const accuracy = gameStats.total > 0 ? Math.round((gameStats.correct / gameStats.total) * 100) : 0;
+        statsContainer.innerHTML = `
+            <div class="stats-item">
+                <span class="stats-label">✅ Benar:</span>
+                <span class="stats-value">${gameStats.correct}</span>
+            </div>
+            <div class="stats-item">
+                <span class="stats-label">❌ Salah:</span>
+                <span class="stats-value">${gameStats.wrong}</span>
+            </div>
+            <div class="stats-item">
+                <span class="stats-label">📊 Akurasi:</span>
+                <span class="stats-value">${accuracy}%</span>
+            </div>
+        `;
+    }
+}
+
+// Update statistics when answer is correct
+function updateCorrectAnswer() {
+    gameStats.correct++;
+    gameStats.total++;
+    saveProgress();
+    updateStatsDisplay();
+}
+
+// Update statistics when answer is wrong
+function updateWrongAnswer() {
+    gameStats.wrong++;
+    gameStats.total++;
+    saveProgress();
+    updateStatsDisplay();
+}
+
+// Save progress
+function saveProgress() {
+    try {
+        localStorage.setItem('gameStats', JSON.stringify(gameStats));
+    } catch (e) {
+        console.warn('localStorage not available:', e);
+        // Fallback to sessionStorage
+        if (typeof sessionStorage !== 'undefined') {
+            try {
+                sessionStorage.setItem('gameStats', JSON.stringify(gameStats));
+            } catch (se) {
+                console.warn('sessionStorage also not available:', se);
+                // In-memory fallback (stats will reset on refresh)
+                console.warn('Stats will reset on page refresh');
+            }
+        }
+    }
+}
+
+// Start game
+async function startGame(difficulty = null) {
+    currentDifficulty = difficulty;
+    currentLevel = 0;
+    usedQuestions = [];
+
+    // Filter questions by difficulty
+    let filteredQuestions = difficulty
+        ? wordBuildingContent.filter(q => q.difficulty === difficulty)
+        : [...wordBuildingContent];
+
+    shuffledQuestions = shuffleArray(filteredQuestions);
+
+    // Reset stats for new game session
+    gameStats = {
+        correct: 0,
+        wrong: 0,
+        total: 0
+    };
+
+    // Initialize progress tracking
+    totalQuestionsInSession = shuffledQuestions.length;
+    completedQuestionsInSession = 0;
+
+    saveProgress();
+
+    // Show stats container
+    const statsContainer = document.querySelector('.stats-container');
+    if (statsContainer) {
+        statsContainer.classList.add('visible');
+    }
+
+    // Show progress container
+    const progressContainer = document.getElementById('progressContainer');
+    if (progressContainer) {
+        progressContainer.style.display = 'block';
+    }
+
+    updateStatsDisplay();
+    updateProgressBar();
+    updateSoundButton();
+    updateMusicButton();
+
+    // Start background music if enabled
+    if (musicEnabled) {
+        playBackgroundMusic();
+    }
+
+    await showWordGame();
+}
+
+// Update progress bar
+function updateProgressBar() {
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+    const progressPercent = document.getElementById('progressPercent');
+
+    if (progressBar && progressText && progressPercent) {
+        const percentage = totalQuestionsInSession > 0
+            ? Math.round((completedQuestionsInSession / totalQuestionsInSession) * 100)
+            : 0;
+
+        progressBar.style.width = percentage + '%';
+        progressText.textContent = `${completedQuestionsInSession} / ${totalQuestionsInSession}`;
+        progressPercent.textContent = percentage + '%';
+    }
+}
+
+// Show Admin Panel
+function showAdminPanel() {
+    // Hide stats container
+    const statsContainer = document.querySelector('.stats-container');
+    if (statsContainer) {
+        statsContainer.classList.remove('visible');
+    }
+
+    // Hide progress container
+    const progressContainer = document.getElementById('progressContainer');
+    if (progressContainer) {
+        progressContainer.style.display = 'none';
+    }
+
+    const content = document.getElementById('game-content');
+    const questionsList = wordBuildingContent.map((q, index) => {
+        const displayIcon = q.emoji 
+            ? `<span class="question-emoji">${q.emoji}</span>` 
+            : (q.imageUrl ? `<span class="question-emoji">🖼️</span>` : `<span class="question-emoji">❓</span>`);
+        const displayNote = q.emoji 
+            ? '' 
+            : (q.imageUrl ? `<br><small>🖼️ Gambar URL: ${q.imageUrl.substring(0, 40)}...</small>` : '<br><small>⚠️ Tidak ada emoji atau gambar</small>');
+        
+        return `
+            <div class="admin-question-item">
+                <div class="question-info">
+                    ${displayIcon}
+                    <strong>${q.word}</strong> - ${q.hint}
+                    ${displayNote}
+                </div>
+                <div class="question-actions">
+                    <button onclick="editQuestion(${index})" class="edit-btn-small">✏️</button>
+                    <button onclick="deleteQuestion(${index})" class="delete-btn-small">🗑️</button>
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    content.innerHTML = `
+        <div class="admin-panel">
+            <h2>⚙️ Kelola Pertanyaan</h2>
+            <p>Total pertanyaan: ${wordBuildingContent.length}</p>
+            <p style="font-size: 0.9em; color: #666; margin-bottom: 20px;">
+                💡 <strong>Prioritas tampilan:</strong> Jika ada emoji, tampilkan emoji. Jika tidak ada emoji, tampilkan gambar URL.
+            </p>
+            
+            <div class="admin-actions">
+                <button onclick="showAddQuestionForm()" class="admin-btn">➕ Tambah Pertanyaan</button>
+                <button onclick="resetToDefault()" class="admin-btn">🔄 Reset ke Default</button>
+                <button onclick="location.reload()" class="admin-btn">🏠 Kembali</button>
+            </div>
+            
+            <div class="questions-list">
+                ${questionsList}
+            </div>
+        </div>
+    `;
+}
+
+// Show add question form
+function showAddQuestionForm(editIndex = null) {
+    const isEdit = editIndex !== null;
+    const question = isEdit ? wordBuildingContent[editIndex] : { word: '', emoji: '📖', imageUrl: '', hint: '' };
+    
+    const content = document.getElementById('game-content');
+    content.innerHTML = `
+        <div class="admin-panel">
+            <h2>${isEdit ? '✏️ Edit' : '➕ Tambah'} Pertanyaan</h2>
+            <form class="question-form" onsubmit="saveQuestion(event, ${editIndex})">
+                <div class="form-group">
+                    <label>Kata (huruf besar):</label>
+                    <input type="text" id="wordInput" value="${question.word}" required 
+                           pattern="[A-Z]+" title="Gunakan huruf besar saja">
+                </div>
+                
+                <div class="form-group">
+                    <label>Emoji (prioritas utama):</label>
+                    <input type="text" id="emojiInput" value="${question.emoji}" 
+                           placeholder="Contoh: 🐱">
+                    <small>Emoji akan ditampilkan jika diisi. Kosongkan jika ingin pakai gambar URL.</small>
+                </div>
+                
+                <div class="form-group">
+                    <label>URL Gambar (jika tidak ada emoji):</label>
+                    <input type="url" id="imageUrlInput" value="${question.imageUrl}" 
+                           placeholder="https://example.com/image.jpg">
+                    <small>Gambar hanya ditampilkan jika emoji kosong</small>
+                </div>
+                
+                <div class="form-group">
+                    <label>Petunjuk:</label>
+                    <input type="text" id="hintInput" value="${question.hint}" required>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="admin-btn">💾 Simpan</button>
+                    <button type="button" onclick="showAdminPanel()" class="admin-btn">❌ Batal</button>
+                </div>
+            </form>
+        </div>
+    `;
+}
+
+// Save question
+function saveQuestion(event, editIndex) {
+    event.preventDefault();
+    
+    const word = document.getElementById('wordInput').value.toUpperCase();
+    const emoji = document.getElementById('emojiInput').value.trim();
+    const imageUrl = document.getElementById('imageUrlInput').value.trim();
+    const hint = document.getElementById('hintInput').value;
+    
+    if (!emoji && !imageUrl) {
+        alert('Harus ada emoji ATAU gambar URL!');
+        return;
+    }
+    
+    const newQuestion = { word, emoji, imageUrl, hint };
+    
+    if (editIndex !== null) {
+        wordBuildingContent[editIndex] = newQuestion;
+    } else {
+        wordBuildingContent.push(newQuestion);
+    }
+    
+    saveCustomQuestions();
+    showAdminPanel();
+}
+
+// Edit question
+function editQuestion(index) {
+    showAddQuestionForm(index);
+}
+
+// Delete question
+function deleteQuestion(index) {
+    if (confirm(`Hapus pertanyaan "${wordBuildingContent[index].word}"?`)) {
+        wordBuildingContent.splice(index, 1);
+        saveCustomQuestions();
+        showAdminPanel();
+    }
+}
+
+// Reset to default
+function resetToDefault() {
+    if (confirm('Reset semua pertanyaan ke default? Perubahan kustom akan hilang.')) {
+        localStorage.removeItem('customQuestions');
+        location.reload();
+    }
+}
+
+// Shuffle array
+function shuffleArray(array) {
+    const newArray = [...array];
+    for (let i = newArray.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+    }
+    return newArray;
+}
+
+// Show celebration popup with confetti
+function showCelebration(word) {
+    // Play correct sound
+    if (soundEnabled) {
+        playCorrectSound();
+    }
+
+    // Get random celebration message
+    const celebrations = [
+        { emoji: '🎉', text: 'Hebat!', subtext: 'Benar sekali!' },
+        { emoji: '⭐', text: 'Luar Biasa!', subtext: 'Kamu pintar!' },
+        { emoji: '🌟', text: 'Sempurna!', subtext: 'Mantap!' },
+        { emoji: '🎊', text: 'Bagus Sekali!', subtext: 'Terus semangat!' },
+        { emoji: '✨', text: 'Keren!', subtext: 'Jawaban tepat!' },
+        { emoji: '🏆', text: 'Juara!', subtext: 'Kamu hebat!' },
+        { emoji: '💫', text: 'Bravo!', subtext: 'Sangat bagus!' },
+        { emoji: '🎯', text: 'Tepat!', subtext: 'Excellent!' }
+    ];
+
+    const celebration = celebrations[Math.floor(Math.random() * celebrations.length)];
+
+    // Create simple confetti
+    createSimpleConfetti();
+
+    // Create celebration popup
+    const popup = document.createElement('div');
+    popup.className = 'celebration-popup';
+    popup.innerHTML = `
+        <div class="celebration-content">
+            <div class="celebration-emoji">${celebration.emoji}</div>
+            <div class="celebration-text">${celebration.text}</div>
+            <div class="celebration-word">${word}</div>
+            <div class="celebration-subtext">${celebration.subtext}</div>
+        </div>
+    `;
+
+    document.body.appendChild(popup);
+
+    // Remove popup after delay
+    setTimeout(() => {
+        popup.classList.add('fade-out');
+        setTimeout(() => popup.remove(), 300);
+    }, 2000);
+}
+
+// Show wrong answer popup
+function showWrongAnswer() {
+    // Play wrong sound
+    if (soundEnabled) {
+        playWrongSound();
+    }
+
+    // Get random encouraging message
+    const encouragements = [
+        { emoji: '🤔', text: 'Oops!', subtext: 'Coba lagi ya!' },
+        { emoji: '😊', text: 'Hampir!', subtext: 'Coba sekali lagi!' },
+        { emoji: '💪', text: 'Ayo!', subtext: 'Kamu pasti bisa!' },
+        { emoji: '🌟', text: 'Jangan menyerah!', subtext: 'Coba yang lain!' },
+        { emoji: '😉', text: 'Belum tepat!', subtext: 'Semangat!' },
+        { emoji: '🎯', text: 'Coba lagi!', subtext: 'Pasti bisa!' },
+        { emoji: '✨', text: 'Hmm...', subtext: 'Pikir sekali lagi!' },
+        { emoji: '🤗', text: 'Tidak apa-apa!', subtext: 'Terus mencoba!' }
+    ];
+
+    const encouragement = encouragements[Math.floor(Math.random() * encouragements.length)];
+
+    // Shake the letter slots
+    shakeletterSlots();
+
+    // Create wrong answer popup
+    const popup = document.createElement('div');
+    popup.className = 'wrong-popup';
+    popup.innerHTML = `
+        <div class="wrong-content">
+            <div class="wrong-emoji">${encouragement.emoji}</div>
+            <div class="wrong-text">${encouragement.text}</div>
+            <div class="wrong-subtext">${encouragement.subtext}</div>
+        </div>
+    `;
+
+    document.body.appendChild(popup);
+
+    // Remove popup after delay
+    setTimeout(() => {
+        popup.classList.add('fade-out');
+        setTimeout(() => popup.remove(), 300);
+    }, 1500);
+}
+
+// Shake letter slots when wrong
+function shakeletterSlots() {
+    const slots = document.querySelectorAll('.letter-slot.filled');
+    slots.forEach(slot => {
+        slot.classList.add('shake-wrong');
+        setTimeout(() => {
+            slot.classList.remove('shake-wrong');
+        }, 500);
+    });
+}
+
+// Create exciting confetti effect - optimized for mobile
+function createSimpleConfetti() {
+    const colors = ['#ff6b6b', '#4ecdc4', '#764ba2', '#667eea', '#ffd93d', '#ff9a9e', '#a18cd1', '#fbc2eb'];
+    const confettiCount = 40; // Increased for more excitement but still performant
+    const emojis = ['⭐', '✨', '💫', '🌟'];
+
+    for (let i = 0; i < confettiCount; i++) {
+        const confetti = document.createElement('div');
+        const isEmoji = Math.random() > 0.7; // 30% chance of emoji
+        const size = isEmoji ? 16 : 10;
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        const left = Math.random() * 100;
+        const delay = Math.random() * 0.4;
+        const duration = 2 + Math.random() * 1.5;
+        const rotation = Math.random() * 720 + 360; // 1-3 full rotations
+
+        confetti.className = 'confetti-simple';
+        
+        if (isEmoji) {
+            confetti.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+            confetti.style.cssText = `
+                position: fixed;
+                font-size: ${size}px;
+                left: ${left}%;
+                top: -30px;
+                animation: confettiFallEmoji ${duration}s ease-out ${delay}s forwards;
+                z-index: 9999;
+                pointer-events: none;
+            `;
+        } else {
+            confetti.style.cssText = `
+                position: fixed;
+                width: ${size}px;
+                height: ${size}px;
+                background: ${color};
+                left: ${left}%;
+                top: -30px;
+                border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
+                animation: confettiFall ${duration}s ease-out ${delay}s forwards;
+                z-index: 9999;
+                pointer-events: none;
+                --rotation: ${rotation}deg;
+            `;
+        }
+
+        document.body.appendChild(confetti);
+
+        setTimeout(() => confetti.remove(), (duration + delay) * 1000 + 100);
+    }
+}
+
+// Word Building Game
+async function showWordGame() {
+    // Get next unused question
+    if (currentLevel < shuffledQuestions.length) {
+        currentWord = shuffledQuestions[currentLevel];
+        usedQuestions.push(currentWord);
+    } else if (usedQuestions.length < wordBuildingContent.length) {
+        // Reshuffle remaining unused questions
+        const remainingQuestions = wordBuildingContent.filter(q => 
+            !usedQuestions.some(used => used.word === q.word)
+        );
+        shuffledQuestions = shuffleArray(remainingQuestions);
+        currentLevel = 0;
+        currentWord = shuffledQuestions[currentLevel];
+        usedQuestions.push(currentWord);
+    } else {
+        // All questions have been used, start over
+        usedQuestions = [];
+        shuffledQuestions = shuffleArray([...wordBuildingContent]);
+        currentLevel = 0;
+        currentWord = shuffledQuestions[currentLevel];
+        usedQuestions.push(currentWord);
+    }
+    
+    selectedLetters = [];
+    
+    // Create available letters (correct letters + some extra)
+    const correctLetters = currentWord.word.split('');
+    const extraLetters = ['A', 'I', 'U', 'E', 'O', 'N', 'G', 'H', 'R', 'T', 'S'];
+    const randomExtras = extraLetters.sort(() => Math.random() - 0.5).slice(0, 3);
+    availableLetters = shuffleArray([...correctLetters, ...randomExtras]);
+    
+    const content = document.getElementById('game-content');
+    
+    const imageDisplay = currentWord.emoji 
+        ? `<div class="emoji">${currentWord.emoji}</div>`
+        : (currentWord.imageUrl 
+            ? `<img src="${currentWord.imageUrl}" alt="${currentWord.word}" class="word-image">` 
+            : `<div class="emoji">❓</div>`);
+    
+    // Update difficulty display in header
+    updateDifficultyDisplay();
+    
+    // Render game (simplified without complex audio detection)
+    renderGame(currentWord.word, imageDisplay, currentWord.hint);
+}
+
+// Render game (simplified version)
+function renderGame(word, imageDisplay, hint) {
+    // Always show voice button - will handle audio detection in speakWord function
+    const voiceButton = `
+        <button class="voice-btn" onclick="speakWord('${word}')" title="Dengar pengucapan">
+            🔊 Dengar
+        </button>
+    `;
+    
+    const content = document.getElementById('game-content');
+    content.innerHTML = `
+        <div class="word-game">
+            <div class="picture-display">
+                <div class="image-container">
+                    ${imageDisplay}
+                    ${voiceButton}
+                </div>
+                <div class="hint">Petunjuk: ${hint}</div>
+            </div>
+            
+            <div class="word-display" id="wordDisplay">
+                ${word.split('').map(() => '<div class="letter-slot"></div>').join('')}
+            </div>
+            
+            <div class="letter-options" id="letterOptions">
+                ${availableLetters.map((letter, index) => `
+                    <button class="letter-btn" onclick="selectLetter('${letter}', ${index})" id="letter-${index}">
+                        ${letter}
+                    </button>
+                `).join('')}
+            </div>
+            
+            <div class="action-buttons">
+                <button class="clear-btn" onclick="clearSelection()">🗑️ Hapus</button>
+                <button class="skip-btn" onclick="skipQuestion()">⏭️ Lewati</button>
+            </div>
+            
+            <div id="feedback"></div>
+        </div>
+    `;
+}
+
+function selectLetter(letter, index) {
+    if (selectedLetters.length < currentWord.word.length) {
+        selectedLetters.push(letter);
+        updateWordDisplay();
+        
+        // Disable the selected letter button
+        document.getElementById(`letter-${index}`).disabled = true;
+        
+        // Auto-check if word is complete
+        if (selectedLetters.length === currentWord.word.length) {
+            setTimeout(checkAnswer, 500);
+        }
+    }
+}
+
+function updateWordDisplay() {
+    const slots = document.querySelectorAll('.letter-slot');
+    selectedLetters.forEach((letter, index) => {
+        if (slots[index]) {
+            slots[index].textContent = letter;
+            slots[index].classList.add('filled');
+        }
+    });
+}
+
+function clearSelection() {
+    selectedLetters = [];
+    
+    // Clear all slots
+    document.querySelectorAll('.letter-slot').forEach(slot => {
+        slot.textContent = '';
+        slot.classList.remove('filled');
+    });
+    
+    // Enable all letter buttons
+    document.querySelectorAll('.letter-btn').forEach(btn => {
+        btn.disabled = false;
+    });
+    
+    // Clear feedback
+    document.getElementById('feedback').innerHTML = '';
+}
+
+// Validate word before checking answer
+function validateWord(word) {
+    if (!word || typeof word !== 'string') return false;
+    if (word.length < 2 || word.length > 12) return false;
+    return true;
+}
+
+function checkAnswer() {
+    const formedWord = selectedLetters.join('');
+    const feedback = document.getElementById('feedback');
+    
+    // Validate formed word
+    if (!validateWord(formedWord) || !validateWord(currentWord.word)) {
+        console.warn('Invalid word detected:', { formedWord, currentWord });
+        return;
+    }
+    
+    if (formedWord === currentWord.word) {
+        // Update statistics
+        updateCorrectAnswer();
+        
+        // Show celebration popup and confetti
+        showCelebration(currentWord.word);
+        
+        // Disable all buttons
+        document.querySelectorAll('.letter-btn').forEach(btn => {
+            btn.disabled = true;
+        });
+        
+        // Auto-advance to next question after delay
+        setTimeout(() => {
+            nextWord();
+        }, 2500);
+    } else {
+        // Update statistics
+        updateWrongAnswer();
+        
+        // Show wrong answer popup
+        showWrongAnswer();
+        
+        // Clear selection after delay
+        setTimeout(clearSelection, 2000);
+    }
+}
+
+async function nextWord() {
+    currentLevel++;
+    completedQuestionsInSession++;
+    updateProgressBar();
+
+    if (currentLevel < shuffledQuestions.length) {
+        await showWordGame();
+    } else {
+        showGameComplete();
+    }
+}
+
+// Skip current question
+function skipQuestion() {
+    showSkipDialog();
+}
+
+// Show custom skip dialog
+function showSkipDialog() {
+    const dialog = document.createElement('div');
+    dialog.className = 'skip-dialog-overlay';
+    dialog.innerHTML = `
+        <div class="skip-dialog">
+            <div class="skip-dialog-content">
+                <div class="skip-emoji">🤔</div>
+                <h3>Lewati Pertanyaan?</h3>
+                <p>Yakin ingin melewati kata ini?</p>
+                <div class="skip-dialog-buttons">
+                    <button class="skip-cancel-btn" onclick="closeSkipDialog()">Tidak</button>
+                    <button class="skip-confirm-btn" onclick="confirmSkip()">Ya, Lewati</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(dialog);
+    
+    // Add enter key support
+    document.addEventListener('keydown', handleSkipDialogKey);
+}
+
+// Close skip dialog
+function closeSkipDialog() {
+    const dialog = document.querySelector('.skip-dialog-overlay');
+    if (dialog) {
+        dialog.remove();
+        document.removeEventListener('keydown', handleSkipDialogKey);
+    }
+}
+
+// Confirm skip
+function confirmSkip() {
+    closeSkipDialog();
+    // Don't count skipped questions in progress, just move to next
+    currentLevel++;
+    if (currentLevel < shuffledQuestions.length) {
+        showWordGame();
+    } else {
+        showGameComplete();
+    }
+}
+
+// Handle keyboard events for dialog
+function handleSkipDialogKey(event) {
+    if (event.key === 'Escape') {
+        closeSkipDialog();
+    } else if (event.key === 'Enter') {
+        confirmSkip();
+    }
+}
+
+// Game Complete
+function showGameComplete() {
+    const content = document.getElementById('game-content');
+    const difficultyText = currentDifficulty === 'easy' ? 'Mudah' : 
+                          currentDifficulty === 'medium' ? 'Sedang' : 
+                          currentDifficulty === 'hard' ? 'Sulit' : '';
+    
+    content.innerHTML = `
+        <div style="text-align: center; padding: 40px;">
+            <h2>🎉 Selesai! 🎉</h2>
+            <p style="font-size: 1.5em; margin: 20px 0;">
+                ${difficultyText ? `Kamu menyelesaikan semua kata level ${difficultyText}!` : 'Kamu hebat!'}
+            </p>
+            <div style="margin: 20px 0;">
+                <button class="next-btn" onclick="startGame('${currentDifficulty}')" style="margin: 5px;">
+                    🔄 Main Lagi
+                </button>
+                <button class="skip-btn" onclick="backToMenu()" style="margin: 5px;">
+                    🏠 Menu Utama
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+// Back to main menu
+function backToMenu() {
+    currentDifficulty = null;
+    updateDifficultyDisplay();
+
+    // Stop background music
+    stopBackgroundMusic();
+
+    // Hide progress and stats
+    const progressContainer = document.getElementById('progressContainer');
+    if (progressContainer) {
+        progressContainer.style.display = 'none';
+    }
+
+    const statsContainer = document.querySelector('.stats-container');
+    if (statsContainer) {
+        statsContainer.classList.remove('visible');
+    }
+
+    // Navigate to main menu
+    window.location.href = '../index.html';
+}
+
+// Voice Word Pronunciation
+function speakWord(word) {
+    if (!soundEnabled) return;
+    
+    // Try to play MP3 file first
+    const audioFile = `audio/${word}.mp3`;
+    const audio = new Audio(audioFile);
+    
+    audio.addEventListener('canplaythrough', () => {
+        audio.play();
+    });
+    
+    audio.addEventListener('error', () => {
+        // Fallback to Web Speech API if MP3 not found
+        fallbackToSpeech(word);
+    });
+    
+    // Start loading the audio
+    audio.load();
+}
+
+// Simplified audio system - no complex caching
+
+// Fallback to Web Speech API
+function fallbackToSpeech(word) {
+    if ('speechSynthesis' in window) {
+        const utterance = new SpeechSynthesisUtterance(word);
+        utterance.lang = 'id-ID'; // Indonesian
+        utterance.rate = 0.8; // Slower for kids
+        utterance.pitch = 1.2; // Higher pitch for kids
+        speechSynthesis.speak(utterance);
+    }
+}
+
+// Sound Effects
+function playCorrectSound() {
+    if (!soundEnabled) return;
+    
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    
+    let notes, waveType, duration, volume;
+    
+    switch (currentSoundTheme) {
+        case 'calm':
+            // Soft, gentle ascending notes
+            notes = [392, 440, 494]; // G, A, B
+            waveType = 'sine';
+            duration = 0.4;
+            volume = 0.2;
+            break;
+        case 'exciting':
+            // Upbeat, celebratory melody
+            notes = [523.25, 659.25, 783.99, 1046.50]; // C, E, G, C (higher)
+            waveType = 'square';
+            duration = 0.2;
+            volume = 0.25;
+            break;
+        default: // 'fun'
+            // Happy, playful melody
+            notes = [523.25, 659.25, 783.99]; // C, E, G (C major chord)
+            waveType = 'sine';
+            duration = 0.3;
+            volume = 0.3;
+    }
+    
+    notes.forEach((frequency, index) => {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.value = frequency;
+        oscillator.type = waveType;
+        
+        gainNode.gain.setValueAtTime(volume, audioContext.currentTime + index * 0.1);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + index * 0.1 + duration);
+        
+        oscillator.start(audioContext.currentTime + index * 0.1);
+        oscillator.stop(audioContext.currentTime + index * 0.1 + duration);
+    });
+}
+
+function playWrongSound() {
+    if (!soundEnabled) return;
+    
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    
+    let startFreq, endFreq, waveType, duration, volume;
+    
+    switch (currentSoundTheme) {
+        case 'calm':
+            // Soft, gentle descending sound
+            startFreq = 300;
+            endFreq = 200;
+            waveType = 'sine';
+            duration = 0.4;
+            volume = 0.15;
+            break;
+        case 'exciting':
+            // More dramatic slide down
+            startFreq = 600;
+            endFreq = 100;
+            waveType = 'sawtooth';
+            duration = 0.2;
+            volume = 0.2;
+            break;
+        default: // 'fun'
+            // Classic boing sound
+            startFreq = 400;
+            endFreq = 150;
+            waveType = 'triangle';
+            duration = 0.3;
+            volume = 0.15;
+    }
+    
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    // Start higher and slide down for "boing" effect
+    oscillator.frequency.setValueAtTime(startFreq, audioContext.currentTime);
+    oscillator.frequency.exponentialRampToValueAtTime(endFreq, audioContext.currentTime + duration);
+    oscillator.type = waveType;
+    
+    gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration + 0.1);
+    
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + duration + 0.1);
+}
