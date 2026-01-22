@@ -42,9 +42,9 @@ const Game = (() => {
   // Audio system - single AudioContext reused (avoids creating many contexts)
   class AudioSystem {
     constructor(){
-      this.ctx = null; 
+      this.ctx = null;
       this.bgAudioElement = null;
-      this.musicEnabled = false;
+      this.musicEnabled = true;
       this.soundEnabled = true;
       this.currentBackgroundMusic = 'backsound1';
       this.availableBackgroundMusic = [
@@ -870,12 +870,9 @@ const Game = (() => {
   // Hide score screen
   function hideScoreScreen(){
     refs.scoreScreen.classList.remove('show');
-    // Stop music when going back to settings
+    // Stop music when going back to settings (but keep musicEnabled state)
     if(audio.bgPlaying){
       audio.stopMusic();
-      audio.musicEnabled = false;
-      refs.musicToggle.setAttribute('aria-pressed', 'false');
-      refs.musicToggle.textContent = '🎵 Music';
     }
     // Reset game state completely
     resetGame();
@@ -925,9 +922,16 @@ const Game = (() => {
     
     updateUI();
     generateQuestion();
-    
+
     // Start timer
     startTimer();
+
+    // Start background music if enabled
+    if(audio.musicEnabled && !audio.bgPlaying){
+      audio.startMusic();
+      refs.musicToggle.setAttribute('aria-pressed', 'true');
+      refs.musicToggle.textContent = '🎵 Music: On';
+    }
   }
   
   function startTimer(){

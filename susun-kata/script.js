@@ -1,3 +1,35 @@
+// ========================================
+// DEVICE DETECTION & PERFORMANCE CONFIG
+// ========================================
+const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+    (window.innerWidth <= 768);
+
+const isTablet = /iPad|Android/i.test(navigator.userAgent) &&
+    window.innerWidth >= 768 && window.innerWidth <= 1024;
+
+const isLowEndDevice = isMobile ||
+    (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4) ||
+    (navigator.deviceMemory && navigator.deviceMemory <= 4);
+
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// Particle counts based on device capability
+const PARTICLE_CONFIG = {
+    background: prefersReducedMotion ? 0 : (isLowEndDevice ? 6 : 12),
+    confetti: isLowEndDevice ? 20 : 40,
+    celebration: isLowEndDevice ? 4 : 8
+};
+
+// Cached DOM elements for performance
+const DOM = {
+    gameContent: null,
+    wordDisplay: null,
+    letterOptions: null,
+    feedback: null,
+    statsDisplay: null,
+    progressBar: null
+};
+
 // Game State
 let wordBuildingContent = [];
 let currentLevel = 0;
@@ -7,12 +39,12 @@ let availableLetters = [];
 let usedQuestions = [];
 let shuffledQuestions = [];
 let soundEnabled = true;
-let musicEnabled = false;
+let musicEnabled = true;
 let backgroundMusic = null;
 let currentDifficulty = null;
 let currentSoundTheme = 'fun'; // fun, calm, exciting
 let currentVisualTheme = 'default'; // default, cotton-candy, ocean, sunset, forest
-let currentBackgroundMusic = 'backsound1'; // Default background music
+let currentBackgroundMusic = 'backsound3'; // Default background music
 let availableBackgroundMusic = []; // Available background music files
 let answerMode = 'click'; // click or input
 let gameStats = {
@@ -22,9 +54,122 @@ let gameStats = {
 };
 let totalQuestionsInSession = 0;
 let completedQuestionsInSession = 0;
+let backgroundParticles = [];
+
+// ========================================
+// AUDIO SYSTEM - Reuses single AudioContext
+// ========================================
+class AudioSystem {
+    constructor() {
+        this.ctx = null;
+        this.soundEnabled = true;
+    }
+
+    init() {
+        if (this.ctx) return;
+        try {
+            this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        } catch (e) {
+            console.warn('AudioContext not available:', e);
+        }
+    }
+
+    getContext() {
+        this.init();
+        return this.ctx;
+    }
+
+    // Play a sequence of notes (for correct sound)
+    playNotes(notes, waveType, duration, volume) {
+        if (!soundEnabled) return;
+        const ctx = this.getContext();
+        if (!ctx) return;
+
+        try {
+            notes.forEach((frequency, index) => {
+                const oscillator = ctx.createOscillator();
+                const gainNode = ctx.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(ctx.destination);
+
+                oscillator.frequency.value = frequency;
+                oscillator.type = waveType;
+
+                gainNode.gain.setValueAtTime(volume, ctx.currentTime + index * 0.1);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + index * 0.1 + duration);
+
+                oscillator.start(ctx.currentTime + index * 0.1);
+                oscillator.stop(ctx.currentTime + index * 0.1 + duration);
+            });
+        } catch (e) {
+            console.warn('Error playing notes:', e);
+        }
+    }
+
+    // Play a frequency sweep (for wrong sound)
+    playSweep(startFreq, endFreq, waveType, duration, volume) {
+        if (!soundEnabled) return;
+        const ctx = this.getContext();
+        if (!ctx) return;
+
+        try {
+            const oscillator = ctx.createOscillator();
+            const gainNode = ctx.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(ctx.destination);
+
+            oscillator.frequency.setValueAtTime(startFreq, ctx.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(endFreq, ctx.currentTime + duration);
+            oscillator.type = waveType;
+
+            gainNode.gain.setValueAtTime(volume, ctx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration + 0.1);
+
+            oscillator.start(ctx.currentTime);
+            oscillator.stop(ctx.currentTime + duration + 0.1);
+        } catch (e) {
+            console.warn('Error playing sweep:', e);
+        }
+    }
+
+    // Play a short click sound
+    playClick() {
+        if (!soundEnabled) return;
+        const ctx = this.getContext();
+        if (!ctx) return;
+
+        try {
+            const oscillator = ctx.createOscillator();
+            const gainNode = ctx.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(ctx.destination);
+
+            oscillator.frequency.setValueAtTime(800, ctx.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.05);
+            oscillator.type = 'sine';
+
+            gainNode.gain.setValueAtTime(0.1, ctx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.05);
+
+            oscillator.start(ctx.currentTime);
+            oscillator.stop(ctx.currentTime + 0.05);
+        } catch (e) {
+            console.warn('Error playing click:', e);
+        }
+    }
+}
+
+// Create single audio system instance
+const audioSystem = new AudioSystem();
 
 // Initialize
 document.addEventListener('DOMContentLoaded', async () => {
+    // Cache DOM elements
+    cacheDOM();
+
     await loadQuestions();
     loadProgress();
     loadSoundSettings();
@@ -36,8 +181,118 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateDifficultyDisplay();
     applyVisualTheme();
     initBackgroundMusic();
+    createBackgroundParticles();
     setupKeyboardSupport();
+
+    // Log device info for debugging
+    console.log('Device Info:', { isMobile, isTablet, isLowEndDevice, prefersReducedMotion, particleConfig: PARTICLE_CONFIG });
 });
+
+// Cache DOM elements for better performance
+function cacheDOM() {
+    DOM.gameContent = document.getElementById('game-content');
+    DOM.statsDisplay = document.getElementById('statsDisplay');
+    DOM.progressBar = document.getElementById('progressBar');
+}
+
+// ========================================
+// BACKGROUND PARTICLES SYSTEM
+// ========================================
+function createBackgroundParticles() {
+    if (prefersReducedMotion || PARTICLE_CONFIG.background === 0) return;
+
+    const container = document.body;
+    const particleCount = PARTICLE_CONFIG.background;
+    const shapes = ['circle', 'star'];
+    const starEmojis = ['✨', '⭐', '💫', '🌟'];
+
+    // Remove existing particles
+    backgroundParticles.forEach(p => p.remove());
+    backgroundParticles = [];
+
+    for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        const shape = shapes[Math.floor(Math.random() * shapes.length)];
+        const size = 8 + Math.random() * 16;
+
+        particle.className = `bg-particle ${shape} float`;
+
+        if (shape === 'star') {
+            particle.textContent = starEmojis[Math.floor(Math.random() * starEmojis.length)];
+            particle.style.fontSize = `${size}px`;
+        } else {
+            particle.style.width = `${size}px`;
+            particle.style.height = `${size}px`;
+        }
+
+        // Random position
+        particle.style.left = `${Math.random() * 100}%`;
+        particle.style.top = `${Math.random() * 100}%`;
+
+        // Random animation parameters
+        const duration = 15 + Math.random() * 20;
+        const delay = Math.random() * -20;
+        const moveX = (Math.random() - 0.5) * 100;
+        const moveY = (Math.random() - 0.5) * 100;
+
+        particle.style.setProperty('--duration', `${duration}s`);
+        particle.style.setProperty('--delay', `${delay}s`);
+        particle.style.setProperty('--moveX', `${moveX}px`);
+        particle.style.setProperty('--moveY', `${moveY}px`);
+
+        container.appendChild(particle);
+        backgroundParticles.push(particle);
+    }
+}
+
+// Recreate particles when theme changes
+function recreateParticles() {
+    requestAnimationFrame(() => {
+        createBackgroundParticles();
+    });
+}
+
+// ========================================
+// OPTIMIZED ANIMATION HELPERS
+// ========================================
+// Use requestAnimationFrame for smoother animations
+function animateElement(element, keyframes, options) {
+    if (!element) return null;
+
+    // Use Web Animations API with RAF
+    return new Promise(resolve => {
+        requestAnimationFrame(() => {
+            const animation = element.animate(keyframes, options);
+            animation.onfinish = resolve;
+        });
+    });
+}
+
+// Throttle function for performance
+function throttle(func, limit) {
+    let inThrottle;
+    return function (...args) {
+        if (!inThrottle) {
+            func.apply(this, args);
+            inThrottle = true;
+            setTimeout(() => inThrottle = false, limit);
+        }
+    };
+}
+
+// Debounce function for resize events
+function debounce(func, wait) {
+    let timeout;
+    return function (...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+    };
+}
+
+// Handle window resize - recreate particles on orientation change
+window.addEventListener('resize', debounce(() => {
+    createBackgroundParticles();
+}, 500));
 
 // Load questions from localStorage or JSON file
 async function loadQuestions() {
@@ -126,10 +381,10 @@ function loadSoundSettings() {
         console.warn('Cannot load sound settings from localStorage:', e);
         // Use default values
         soundEnabled = true;
-        musicEnabled = false;
+        musicEnabled = true;
         currentSoundTheme = 'fun';
         currentVisualTheme = 'default';
-        currentBackgroundMusic = 'backsound1';
+        currentBackgroundMusic = 'backsound3';
     }
 }
 
@@ -324,6 +579,9 @@ function applyVisualTheme() {
     } else if (currentVisualTheme === 'forest') {
         body.classList.add('forest-theme');
     }
+
+    // Recreate particles with new theme colors
+    recreateParticles();
 }
 
 // Update visual theme selector
@@ -339,15 +597,16 @@ function updateDifficultyDisplay() {
     const homeButton = document.getElementById('homeButton');
     const selectorContainer = document.getElementById('difficultySelectorContainer');
     const difficultySelector = document.getElementById('difficultySelector');
-    
+
+    // Always show home button
+    if (homeButton) homeButton.style.display = 'inline-flex';
+
     if (currentDifficulty) {
-        // Show home button and difficulty selector
-        if (homeButton) homeButton.style.display = 'inline-flex';
+        // Show difficulty selector during gameplay
         if (selectorContainer) selectorContainer.style.display = 'flex';
         if (difficultySelector) difficultySelector.value = currentDifficulty;
     } else {
-        // Hide controls on start screen
-        if (homeButton) homeButton.style.display = 'none';
+        // Hide difficulty selector on start screen
         if (selectorContainer) selectorContainer.style.display = 'none';
     }
 }
@@ -818,9 +1077,16 @@ function shakeletterSlots() {
 
 // Create exciting confetti effect - optimized for mobile
 function createSimpleConfetti() {
+    // Skip confetti if user prefers reduced motion
+    if (prefersReducedMotion) return;
+
     const colors = ['#ff6b6b', '#4ecdc4', '#764ba2', '#667eea', '#ffd93d', '#ff9a9e', '#a18cd1', '#fbc2eb'];
-    const confettiCount = 40; // Increased for more excitement but still performant
+    const confettiCount = PARTICLE_CONFIG.confetti; // Use device-optimized count
     const emojis = ['⭐', '✨', '💫', '🌟'];
+
+    // Use document fragment for better performance
+    const fragment = document.createDocumentFragment();
+    const confettiElements = [];
 
     for (let i = 0; i < confettiCount; i++) {
         const confetti = document.createElement('div');
@@ -833,7 +1099,7 @@ function createSimpleConfetti() {
         const rotation = Math.random() * 720 + 360; // 1-3 full rotations
 
         confetti.className = 'confetti-simple';
-        
+
         if (isEmoji) {
             confetti.textContent = emojis[Math.floor(Math.random() * emojis.length)];
             confetti.style.cssText = `
@@ -844,6 +1110,7 @@ function createSimpleConfetti() {
                 animation: confettiFallEmoji ${duration}s ease-out ${delay}s forwards;
                 z-index: 9999;
                 pointer-events: none;
+                will-change: transform;
             `;
         } else {
             confetti.style.cssText = `
@@ -857,14 +1124,22 @@ function createSimpleConfetti() {
                 animation: confettiFall ${duration}s ease-out ${delay}s forwards;
                 z-index: 9999;
                 pointer-events: none;
+                will-change: transform;
                 --rotation: ${rotation}deg;
             `;
         }
 
-        document.body.appendChild(confetti);
-
-        setTimeout(() => confetti.remove(), (duration + delay) * 1000 + 100);
+        fragment.appendChild(confetti);
+        confettiElements.push({ element: confetti, removeTime: (duration + delay) * 1000 + 100 });
     }
+
+    // Append all at once for better performance
+    document.body.appendChild(fragment);
+
+    // Schedule removal
+    confettiElements.forEach(({ element, removeTime }) => {
+        setTimeout(() => element.remove(), removeTime);
+    });
 }
 
 // Word Building Game
@@ -892,7 +1167,8 @@ async function showWordGame() {
     }
     
     selectedLetters = [];
-    
+    previousInputLength = 0; // Reset for input mode animation
+
     // Create available letters (correct letters + some extra)
     const correctLetters = currentWord.word.split('');
     const extraLetters = ['A', 'I', 'U', 'E', 'O', 'N', 'G', 'H', 'R', 'T', 'S'];
@@ -1018,11 +1294,24 @@ function selectLetter(letter, index) {
 function updateWordDisplay() {
     const slots = document.querySelectorAll('.letter-slot');
     selectedLetters.forEach((letter, index) => {
-        if (slots[index]) {
+        if (slots[index] && !slots[index].classList.contains('filled')) {
+            // Add letter with animation
             slots[index].textContent = letter;
             slots[index].classList.add('filled');
+
+            // Play subtle click sound for feedback
+            if (soundEnabled && !prefersReducedMotion) {
+                playLetterClickSound();
+            }
+        } else if (slots[index]) {
+            slots[index].textContent = letter;
         }
     });
+}
+
+// Subtle click sound for letter selection
+function playLetterClickSound() {
+    audioSystem.playClick();
 }
 
 function clearSelection() {
@@ -1170,30 +1459,55 @@ function clearManualInput() {
         slot.textContent = '';
         slot.classList.remove('filled');
     });
+    // Reset input tracking
+    previousInputLength = 0;
 }
 
 // Handle input typing in real-time
+// Track previous input length for animation
+let previousInputLength = 0;
+
 function handleInputTyping(inputElement) {
     const value = inputElement.value.toUpperCase().trim();
     const slots = document.querySelectorAll('.letter-slot');
     const maxLetters = currentWord.word.length;
-    
-    // Clear all slots first
-    slots.forEach(slot => {
-        slot.textContent = '';
-        slot.classList.remove('filled');
-    });
-    
-    // Fill slots with typed letters
-    for (let i = 0; i < Math.min(value.length, maxLetters); i++) {
-        if (slots[i]) {
-            slots[i].textContent = value[i];
-            slots[i].classList.add('filled');
+    const currentLength = Math.min(value.length, maxLetters);
+
+    // Determine if letter was added or removed
+    const isAdding = currentLength > previousInputLength;
+
+    // Update slots
+    slots.forEach((slot, index) => {
+        if (index < currentLength) {
+            const letter = value[index];
+            const wasEmpty = !slot.classList.contains('filled');
+
+            slot.textContent = letter;
+
+            if (wasEmpty && isAdding) {
+                // New letter added - trigger animation
+                slot.classList.remove('filled');
+                // Force reflow to restart animation
+                void slot.offsetWidth;
+                slot.classList.add('filled');
+
+                // Play click sound for new letter
+                if (soundEnabled && !prefersReducedMotion) {
+                    playLetterClickSound();
+                }
+            } else {
+                slot.classList.add('filled');
+            }
+        } else {
+            // Clear this slot
+            slot.textContent = '';
+            slot.classList.remove('filled');
         }
-    }
-    
-    // Auto-submit if word is complete (same length as answer), regardless of correctness
-    // The correctness will be checked in submitManualInput()
+    });
+
+    previousInputLength = currentLength;
+
+    // Auto-submit if word is complete (same length as answer)
     if (value.length === maxLetters) {
         setTimeout(() => {
             submitManualInput();
@@ -1371,7 +1685,7 @@ function speakWord(word) {
     }
     
     // Try to play MP3 file first
-    const audioFile = `audio/${word}.mp3`;
+    const audioFile = `../audio/${word}.mp3`;
     const audio = new Audio(audioFile);
     
     // Resume background music when word audio finishes
@@ -1484,11 +1798,9 @@ function setupKeyboardSupport() {
 // Sound Effects
 function playCorrectSound() {
     if (!soundEnabled) return;
-    
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    
+
     let notes, waveType, duration, volume;
-    
+
     switch (currentSoundTheme) {
         case 'calm':
             // Soft, gentle ascending notes
@@ -1511,32 +1823,15 @@ function playCorrectSound() {
             duration = 0.3;
             volume = 0.3;
     }
-    
-    notes.forEach((frequency, index) => {
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-        
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-        
-        oscillator.frequency.value = frequency;
-        oscillator.type = waveType;
-        
-        gainNode.gain.setValueAtTime(volume, audioContext.currentTime + index * 0.1);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + index * 0.1 + duration);
-        
-        oscillator.start(audioContext.currentTime + index * 0.1);
-        oscillator.stop(audioContext.currentTime + index * 0.1 + duration);
-    });
+
+    audioSystem.playNotes(notes, waveType, duration, volume);
 }
 
 function playWrongSound() {
     if (!soundEnabled) return;
-    
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    
+
     let startFreq, endFreq, waveType, duration, volume;
-    
+
     switch (currentSoundTheme) {
         case 'calm':
             // Soft, gentle descending sound
@@ -1562,21 +1857,6 @@ function playWrongSound() {
             duration = 0.3;
             volume = 0.15;
     }
-    
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    
-    // Start higher and slide down for "boing" effect
-    oscillator.frequency.setValueAtTime(startFreq, audioContext.currentTime);
-    oscillator.frequency.exponentialRampToValueAtTime(endFreq, audioContext.currentTime + duration);
-    oscillator.type = waveType;
-    
-    gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration + 0.1);
-    
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + duration + 0.1);
+
+    audioSystem.playSweep(startFreq, endFreq, waveType, duration, volume);
 }
