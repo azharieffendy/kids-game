@@ -53,7 +53,6 @@ async function loadQuestions() {
                 wordBuildingContent = getDefaultQuestions();
             } else {
                 wordBuildingContent = data;
-                console.log('Loaded questions from JSON file. Total questions:', wordBuildingContent.length);
             }
         } else {
             console.error('Failed to load questions.json (status:', response.status, ')');
@@ -61,7 +60,6 @@ async function loadQuestions() {
         }
     } catch (error) {
         console.error('Error loading questions.json:', error);
-        console.log('TIP: Use a local web server (Live Server, http-server, python -m http.server)');
         wordBuildingContent = getDefaultQuestions();
     }
 }
@@ -259,7 +257,6 @@ function updateMusicButton() {
 function playBackgroundMusic() {
     if (backgroundMusic && musicEnabled && currentBackgroundMusic) {
         const musicPath = `../audio/backsound/${currentBackgroundMusic}.mp3`;
-        console.log('Attempting to play background music:', musicPath);
         backgroundMusic.src = musicPath;
         backgroundMusic.load();
         backgroundMusic.play().then(() => {
@@ -1124,8 +1121,6 @@ function checkManualAnswer(userInput) {
         return;
     }
     
-    console.log('Checking answer:', userInput, 'vs correct:', currentWord.word);
-    
     if (userInput === currentWord.word) {
         // Update statistics
         updateCorrectAnswer();
@@ -1373,7 +1368,6 @@ function speakWord(word) {
     // Pause background music temporarily so user can hear clearly
     if (wasMusicPlaying) {
         backgroundMusic.pause();
-        console.log('Background music paused for word pronunciation');
     }
     
     // Try to play MP3 file first
@@ -1386,7 +1380,6 @@ function speakWord(word) {
             backgroundMusic.play().catch(e => {
                 console.warn('Could not resume background music:', e);
             });
-            console.log('Background music resumed after word pronunciation');
         }
     };
     
@@ -1395,12 +1388,10 @@ function speakWord(word) {
     });
     
     audio.addEventListener('ended', () => {
-        console.log('Word audio finished, resuming background music');
         resumeBackgroundMusic();
     });
     
     audio.addEventListener('error', () => {
-        console.log('Word audio file not found, using fallback speech');
         // Fallback to Web Speech API if MP3 not found
         fallbackToSpeech(word, () => {
             // Resume after speech finishes
@@ -1424,7 +1415,6 @@ function fallbackToSpeech(word, onEndCallback) {
         
         // Add event listener for when speech ends
         utterance.onend = () => {
-            console.log('Speech synthesis finished');
             if (onEndCallback) {
                 onEndCallback();
             }
