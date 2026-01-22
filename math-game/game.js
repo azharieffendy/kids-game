@@ -43,21 +43,40 @@ const Game = (() => {
   class AudioSystem {
     constructor(){
       this.ctx = null; 
-      this.bgGain = null; 
-      this.bgOscillators = []; 
-      this.bgPlaying = false;
+      this.bgAudioElement = null;
       this.musicEnabled = false;
-      this.soundEnabled = true; // Sound effects enabled by default
+      this.soundEnabled = true;
+      this.currentBackgroundMusic = 'backsound1';
+      this.availableBackgroundMusic = [
+        { name: 'backsound1', displayName: '🎵 Musik 1' },
+        { name: 'backsound2', displayName: '🎵 Musik 2' },
+        { name: 'backsound3', displayName: '🎵 Musik 3' }
+      ];
     }
     
     init(){ 
       if(this.ctx) return; 
       this.ctx = new (window.AudioContext||window.webkitAudioContext)(); 
+      
+      // Create audio element for background music
+      if(!this.bgAudioElement){
+        this.bgAudioElement = new Audio();
+        this.bgAudioElement.loop = true;
+        this.bgAudioElement.volume = 0.3;
+        
+        // Add event listener to ensure loop works
+        this.bgAudioElement.addEventListener('ended', () => {
+          // This will trigger when audio ends
+          // With loop=true, this shouldn't happen, but ensures it loops
+          this.bgAudioElement.currentTime = 0;
+          this.bgAudioElement.play();
+        });
+      }
     }
     
     // Enhanced sound effects
     playSfx(type){
-      if(!this.soundEnabled) return; // Check if sound is enabled
+      if(!this.soundEnabled) return;
       try{
         this.init();
         const now = this.ctx.currentTime;
@@ -106,73 +125,59 @@ const Game = (() => {
     }
     
     startMusic(){
-      if(this.bgPlaying || !this.musicEnabled) return;
+      if(!this.musicEnabled) return;
       
       try{
         this.init();
         
-        // Create gain node for background music
-        this.bgGain = this.ctx.createGain();
-        this.bgGain.gain.value = 0.08; // Low volume for background
-        this.bgGain.connect(this.ctx.destination);
-        
-        // Simple pleasant chord progression: C major, G major, A minor, F major
-        const progression = [
-          [261.63, 329.63, 392.00], // C major (C-E-G)
-          [392.00, 493.88, 587.33], // G major (G-B-D)
-          [440.00, 523.25, 659.25], // A minor (A-C-E)
-          [349.23, 440.00, 523.25]  // F major (F-A-C)
-        ];
-        
-        let chordIndex = 0;
-        const playChord = () => {
-          if(!this.bgPlaying) return;
-          
-          // Stop previous oscillators
-          this.bgOscillators.forEach(osc => {
-            try{ osc.stop(); }catch(e){}
+        // Play audio file
+        if(this.bgAudioElement){
+          const musicPath = `../audio/backsound/${this.currentBackgroundMusic}.mp3`;
+          console.log('Math game: Attempting to play background music:', musicPath);
+          this.bgAudioElement.src = musicPath;
+          this.bgAudioElement.load();
+          this.bgAudioElement.play().then(() => {
+            console.log('Math game: Background music playing successfully');
+          }).catch(e => {
+            console.log('Math game: Could not play background music:', e);
+            console.warn('Error details:', {
+              src: this.bgAudioElement.src,
+              error: e,
+              currentTime: this.bgAudioElement.currentTime,
+              readyState: this.bgAudioElement.readyState
+            });
           });
-          this.bgOscillators = [];
-          
-          // Play current chord
-          const chord = progression[chordIndex];
-          chord.forEach(freq => {
-            const osc = this.ctx.createOscillator();
-            osc.type = 'sine';
-            osc.frequency.value = freq;
-            osc.connect(this.bgGain);
-            osc.start();
-            this.bgOscillators.push(osc);
-          });
-          
-          // Move to next chord
-          chordIndex = (chordIndex + 1) % progression.length;
-          
-          // Schedule next chord change (every 2 seconds for slow, calming pace)
-          setTimeout(playChord, 2000);
-        };
-        
-        this.bgPlaying = true;
-        playChord();
+        }
       }catch(e){
-        console.log('Music not available:', e);
+        console.log('Math game: Music not available:', e);
       }
     }
     
     stopMusic(){
-      if(!this.bgPlaying) return;
+      if(this.bgAudioElement){
+        this.bgAudioElement.pause();
+        this.bgAudioElement.currentTime = 0;
+      }
+    }
+    
+    changeBackgroundMusic(musicName){
+      this.currentBackgroundMusic = musicName;
       
-      this.bgPlaying = false;
-      this.bgOscillators.forEach(osc => {
-        try{ 
-          osc.stop(); 
-        }catch(e){}
-      });
-      this.bgOscillators = [];
+      // Save preference
+      try{
+        localStorage.setItem('mf_backgroundMusic', musicName);
+      }catch(e){}
       
-      if(this.bgGain){
-        this.bgGain.disconnect();
-        this.bgGain = null;
+      // Reload music if currently playing
+      if(this.musicEnabled){
+        this.stopMusic();
+        this.startMusic();
+      }
+      
+      // Update selector
+      const selector = document.getElementById('backgroundMusicSelector');
+      if(selector){
+        selector.value = musicName;
       }
     }
     
@@ -186,6 +191,15 @@ const Game = (() => {
       }
       
       return this.musicEnabled;
+    }
+    
+    loadSettings(){
+      try{
+        const savedMusic = localStorage.getItem('mf_backgroundMusic');
+        if(savedMusic){
+          this.currentBackgroundMusic = savedMusic;
+        }
+      }catch(e){}
     }
   }
 
@@ -1189,6 +1203,23 @@ const Game = (() => {
         refs.soundToggle.click();
         return;
       }
+      // Manual input mode: redirect alphanumeric keys to input field
+      if(state.answerMode === 'input' && state.running && !state.paused){
+        // Allow Enter for submit, Backspace for delete, and numbers/minus for input
+        const isNumberKey = /^[0-9]$/.test(e.key);
+        const isMinusKey = e.key === '-';
+        const isEnterKey = e.key === 'Enter';
+        const isBackspace = e.key === 'Backspace';
+        
+        if(isNumberKey || isMinusKey || isEnterKey || isBackspace){
+          // Ensure input is focused
+          if(document.activeElement !== refs.answerInput){
+            refs.answerInput.focus();
+          }
+          // Let the default behavior handle the input
+          return;
+        }
+      }
       // Only handle number keys in multiple choice mode during gameplay
       if(state.answerMode === 'choice' && state.running && !state.paused && ['1', '2', '3', '4'].includes(e.key)){
         const idx = parseInt(e.key) - 1;
@@ -1222,4 +1253,18 @@ const Game = (() => {
 })();
 
 // Start
-document.addEventListener('DOMContentLoaded', ()=>{ Game.init(); });
+document.addEventListener('DOMContentLoaded', ()=>{ 
+  Game.init(); 
+  
+  // Load background music settings
+  if(Game.state && Game.state.audio){
+    Game.state.audio.loadSettings();
+  }
+  
+  // Make changeBackgroundMusic globally accessible
+  window.changeBackgroundMusic = (musicName) => {
+    if(Game.state && Game.state.audio){
+      Game.state.audio.changeBackgroundMusic(musicName);
+    }
+  };
+});

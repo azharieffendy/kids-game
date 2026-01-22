@@ -48,6 +48,13 @@
                                 <option value="exciting">🎉 Exciting</option>
                             </select>
                         </div>
+                        <div class="sound-theme-container">
+                            <select id="backgroundMusicSelector" class="sound-theme-select" onchange="changeBackgroundMusic(this.value)" title="Pilih musik latar">
+                                <option value="backsound1">🎵 Musik 1</option>
+                                <option value="backsound2">🎵 Musik 2</option>
+                                <option value="backsound3">🎵 Musik 3</option>
+                            </select>
+                        </div>
                         <button id="soundToggle" class="sound-toggle" onclick="toggleSound()" title="Matikan/Hidupkan suara">🔊</button>
                         <button id="musicToggle" class="sound-toggle" onclick="toggleMusic()" title="Matikan/Hidupkan musik">🎵</button>
                     </div>
@@ -83,6 +90,18 @@
                                 <button class="difficulty-btn hard" onclick="startGame('hard')" title="Kata 7+ huruf">
                                     🧠 Sulit
                                     <small>(7+ huruf)</small>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="answer-mode-selection">
+                            <h3>Pilih Mode Jawaban:</h3>
+                            <div class="answer-mode-buttons">
+                                <button class="answer-mode-btn click-mode active" onclick="setAnswerMode('click')" data-answer-mode="click" title="Klik huruf untuk menyusun kata">
+                                    🖱️ Klik Huruf
+                                </button>
+                                <button class="answer-mode-btn input-mode" onclick="setAnswerMode('input')" data-answer-mode="input" title="Ketik jawaban langsung">
+                                    ⌨️ Ketik Jawaban
                                 </button>
                             </div>
                         </div>

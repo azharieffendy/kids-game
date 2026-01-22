@@ -12,6 +12,9 @@ let backgroundMusic = null;
 let currentDifficulty = null;
 let currentSoundTheme = 'fun'; // fun, calm, exciting
 let currentVisualTheme = 'default'; // default, cotton-candy, ocean, sunset, forest
+let currentBackgroundMusic = 'backsound1'; // Default background music
+let availableBackgroundMusic = []; // Available background music files
+let answerMode = 'click'; // click or input
 let gameStats = {
     correct: 0,
     wrong: 0,
@@ -25,11 +28,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadQuestions();
     loadProgress();
     loadSoundSettings();
+    loadAnswerMode();
+    loadBackgroundMusicFiles();
     updateSoundThemeSelector();
     updateVisualThemeSelector();
+    updateBackgroundMusicSelector();
     updateDifficultyDisplay();
     applyVisualTheme();
     initBackgroundMusic();
+    setupKeyboardSupport();
 });
 
 // Load questions from localStorage or JSON file
@@ -112,6 +119,11 @@ function loadSoundSettings() {
         if (savedVisualTheme) {
             currentVisualTheme = savedVisualTheme;
         }
+
+        const savedBackgroundMusic = localStorage.getItem('backgroundMusic');
+        if (savedBackgroundMusic) {
+            currentBackgroundMusic = savedBackgroundMusic;
+        }
     } catch (e) {
         console.warn('Cannot load sound settings from localStorage:', e);
         // Use default values
@@ -119,6 +131,34 @@ function loadSoundSettings() {
         musicEnabled = false;
         currentSoundTheme = 'fun';
         currentVisualTheme = 'default';
+        currentBackgroundMusic = 'backsound1';
+    }
+}
+
+// Load available background music files
+function loadBackgroundMusicFiles() {
+    // Available background music files
+    availableBackgroundMusic = [
+        { name: 'backsound1', displayName: '🎵 Musik 1' },
+        { name: 'backsound2', displayName: '🎶 Musik 2' },
+        { name: 'backsound3', displayName: '🎼 Musik 3' }
+    ];
+    
+    // Validate if files exist
+    availableBackgroundMusic = availableBackgroundMusic.filter(track => {
+        const audio = new Audio(`../audio/backsound/${track.name}.mp3`);
+        return true; // Assume they exist since user said they added them
+    });
+}
+
+// Update background music selector
+function updateBackgroundMusicSelector() {
+    const musicSelector = document.getElementById('backgroundMusicSelector');
+    if (musicSelector) {
+        musicSelector.innerHTML = availableBackgroundMusic.map(track => 
+            `<option value="${track.name}">${track.displayName}</option>`
+        ).join('');
+        musicSelector.value = currentBackgroundMusic;
     }
 }
 
@@ -129,6 +169,7 @@ function saveSoundSettings() {
         localStorage.setItem('musicEnabled', musicEnabled.toString());
         localStorage.setItem('soundTheme', currentSoundTheme);
         localStorage.setItem('visualTheme', currentVisualTheme);
+        localStorage.setItem('backgroundMusic', currentBackgroundMusic);
     } catch (e) {
         console.warn('Cannot save sound settings to localStorage:', e);
         alert('Cannot save settings. Storage may be full or disabled.');
@@ -157,11 +198,17 @@ function initBackgroundMusic() {
         backgroundMusic = new Audio();
         backgroundMusic.loop = true;
         backgroundMusic.volume = 0.3;
-
-        // Create a simple pleasant background music using Web Audio API
-        createBackgroundMusicTrack();
+        
+        // Add event listener to ensure loop works
+        backgroundMusic.addEventListener('ended', () => {
+            // This will trigger when audio ends
+            // With loop=true, this shouldn't happen, but ensures it loops
+            backgroundMusic.currentTime = 0;
+            backgroundMusic.play();
+        });
     }
     updateMusicButton();
+    updateBackgroundMusicSelector();
 }
 
 // Create background music track using Web Audio API
@@ -169,6 +216,21 @@ function createBackgroundMusicTrack() {
     // We'll use a simple melody pattern that loops
     // For now, we'll just handle the toggle - you can add actual music file later
     // backgroundMusic.src = 'audio/background-music.mp3';
+}
+
+// Change background music
+function changeBackgroundMusic(musicName) {
+    currentBackgroundMusic = musicName;
+    saveSoundSettings();
+    
+    // Reload music if it's currently playing
+    if (musicEnabled) {
+        stopBackgroundMusic();
+        playBackgroundMusic();
+    }
+    
+    // Update selector
+    updateBackgroundMusicSelector();
 }
 
 // Toggle music on/off
@@ -195,83 +257,31 @@ function updateMusicButton() {
 
 // Play background music
 function playBackgroundMusic() {
-    if (backgroundMusic && musicEnabled) {
-        // Generate soft background music using Web Audio API
-        playGeneratedBackgroundMusic();
+    if (backgroundMusic && musicEnabled && currentBackgroundMusic) {
+        const musicPath = `../audio/backsound/${currentBackgroundMusic}.mp3`;
+        console.log('Attempting to play background music:', musicPath);
+        backgroundMusic.src = musicPath;
+        backgroundMusic.load();
+        backgroundMusic.play().then(() => {
+            console.log('Background music playing successfully');
+        }).catch(e => {
+            console.warn('Could not play background music:', e);
+            console.warn('Error details:', {
+                src: backgroundMusic.src,
+                error: e,
+                currentTime: backgroundMusic.currentTime,
+                readyState: backgroundMusic.readyState
+            });
+        });
     }
 }
 
 // Stop background music
 function stopBackgroundMusic() {
-    // Stop HTML5 Audio
     if (backgroundMusic) {
         backgroundMusic.pause();
         backgroundMusic.currentTime = 0;
     }
-    
-    // Stop Web Audio API music with proper cleanup
-    if (window.musicContext) {
-        try {
-            // Close all nodes and disconnect
-            window.musicContext.close();
-        } catch (e) {
-            console.warn('Error closing audio context:', e);
-        }
-        window.musicContext = null;
-    }
-}
-
-// Generate pleasant background music using Web Audio API
-function playGeneratedBackgroundMusic() {
-    if (!musicEnabled) return;
-
-    // Stop any existing music
-    if (window.musicContext) {
-        window.musicContext.close();
-    }
-
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    window.musicContext = audioContext;
-
-    // Create a simple, pleasant melody loop
-    const notes = [
-        { freq: 523.25, time: 0, duration: 0.5 },    // C5
-        { freq: 587.33, time: 0.5, duration: 0.5 },  // D5
-        { freq: 659.25, time: 1, duration: 0.5 },    // E5
-        { freq: 783.99, time: 1.5, duration: 0.5 },  // G5
-        { freq: 659.25, time: 2, duration: 0.5 },    // E5
-        { freq: 587.33, time: 2.5, duration: 0.5 },  // D5
-        { freq: 523.25, time: 3, duration: 1 },      // C5
-    ];
-
-    function playMelody() {
-        if (!musicEnabled) return;
-
-        notes.forEach(note => {
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-
-            oscillator.frequency.value = note.freq;
-            oscillator.type = 'sine';
-
-            gainNode.gain.setValueAtTime(0, audioContext.currentTime + note.time);
-            gainNode.gain.linearRampToValueAtTime(0.08, audioContext.currentTime + note.time + 0.05);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + note.time + note.duration);
-
-            oscillator.start(audioContext.currentTime + note.time);
-            oscillator.stop(audioContext.currentTime + note.time + note.duration);
-        });
-
-        // Loop the melody
-        if (musicEnabled) {
-            setTimeout(playMelody, 4000);
-        }
-    }
-
-    playMelody();
 }
 
 // Change sound theme
@@ -917,36 +927,80 @@ function renderGame(word, imageDisplay, hint) {
     `;
     
     const content = document.getElementById('game-content');
-    content.innerHTML = `
-        <div class="word-game">
-            <div class="picture-display">
-                <div class="image-container">
-                    ${imageDisplay}
-                    ${voiceButton}
+    
+    // Render based on answer mode
+    if (answerMode === 'input') {
+        // Manual input mode
+        content.innerHTML = `
+            <div class="word-game">
+                <div class="picture-display">
+                    <div class="image-container">
+                        ${imageDisplay}
+                        ${voiceButton}
+                    </div>
+                    <div class="hint">Petunjuk: ${hint}</div>
                 </div>
-                <div class="hint">Petunjuk: ${hint}</div>
+                
+                <div class="word-display" id="wordDisplay">
+                    ${word.split('').map(() => '<div class="letter-slot"></div>').join('')}
+                </div>
+                
+                <!-- Hidden input for keyboard capture -->
+                <input type="text" 
+                       id="manualInput" 
+                       maxlength="${word.length}"
+                       autocomplete="off"
+                       autocorrect="off"
+                       autocapitalize="characters"
+                       style="position: absolute; left: -9999px; opacity: 0;"
+                       oninput="handleInputTyping(this)">
+                
+                <div class="action-buttons">
+                    <button class="clear-btn" onclick="clearManualInput()">🗑️ Hapus</button>
+                    <button class="skip-btn" onclick="skipQuestion()">⏭️ Lewati</button>
+                </div>
+                
+                <div id="feedback"></div>
             </div>
-            
-            <div class="word-display" id="wordDisplay">
-                ${word.split('').map(() => '<div class="letter-slot"></div>').join('')}
+        `;
+        // Focus on hidden input after a short delay
+        setTimeout(() => {
+            const input = document.getElementById('manualInput');
+            if (input) input.focus();
+        }, 200);
+    } else {
+        // Click mode (original)
+        content.innerHTML = `
+            <div class="word-game">
+                <div class="picture-display">
+                    <div class="image-container">
+                        ${imageDisplay}
+                        ${voiceButton}
+                    </div>
+                    <div class="hint">Petunjuk: ${hint}</div>
+                </div>
+                
+                <div class="word-display" id="wordDisplay">
+                    ${word.split('').map(() => '<div class="letter-slot"></div>').join('')}
+                </div>
+                
+                <div class="letter-options" id="letterOptions">
+                    ${availableLetters.map((letter, index) => `
+                        <button class="letter-btn" onclick="selectLetter('${letter}', ${index})" id="letter-${index}">
+                            ${letter}
+                        </button>
+                    `).join('')}
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="clear-btn" onclick="clearSelection()">🗑️ Hapus</button>
+                    <button class="skip-btn" onclick="skipQuestion()">⏭️ Lewati</button>
+                </div>
+                
+                <div id="feedback"></div>
             </div>
-            
-            <div class="letter-options" id="letterOptions">
-                ${availableLetters.map((letter, index) => `
-                    <button class="letter-btn" onclick="selectLetter('${letter}', ${index})" id="letter-${index}">
-                        ${letter}
-                    </button>
-                `).join('')}
-            </div>
-            
-            <div class="action-buttons">
-                <button class="clear-btn" onclick="clearSelection()">🗑️ Hapus</button>
-                <button class="skip-btn" onclick="skipQuestion()">⏭️ Lewati</button>
-            </div>
-            
-            <div id="feedback"></div>
-        </div>
-    `;
+        `;
+    }
 }
 
 function selectLetter(letter, index) {
@@ -992,11 +1046,164 @@ function clearSelection() {
     document.getElementById('feedback').innerHTML = '';
 }
 
+// Set answer mode (click or input)
+function setAnswerMode(mode) {
+    answerMode = mode;
+    
+    // Update active button styling
+    document.querySelectorAll('.answer-mode-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.answerMode === mode) {
+            btn.classList.add('active');
+        }
+    });
+    
+    // Save preference to localStorage
+    try {
+        localStorage.setItem('answerMode', mode);
+    } catch (e) {
+        console.warn('Cannot save answer mode to localStorage:', e);
+    }
+}
+
+// Load answer mode preference
+function loadAnswerMode() {
+    try {
+        const saved = localStorage.getItem('answerMode');
+        if (saved && (saved === 'click' || saved === 'input')) {
+            answerMode = saved;
+            // Update UI to match saved preference
+            document.querySelectorAll('.answer-mode-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.answerMode === answerMode) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+    } catch (e) {
+        console.warn('Cannot load answer mode from localStorage:', e);
+    }
+}
+
 // Validate word before checking answer
 function validateWord(word) {
     if (!word || typeof word !== 'string') return false;
     if (word.length < 2 || word.length > 12) return false;
     return true;
+}
+
+// Handle manual input submission
+function submitManualInput() {
+    const input = document.getElementById('manualInput');
+    if (!input) return;
+    
+    const userInput = input.value.toUpperCase().trim();
+    
+    // Validate input
+    if (!validateWord(userInput)) {
+        return;
+    }
+    
+    // Disable input while processing
+    input.disabled = true;
+    
+    // Check the answer
+    checkManualAnswer(userInput);
+}
+
+// Check manual input answer
+function checkManualAnswer(userInput) {
+    const feedback = document.getElementById('feedback');
+    
+    // Validate words
+    if (!validateWord(userInput) || !validateWord(currentWord.word)) {
+        console.warn('Invalid word detected:', { userInput, currentWord });
+        // Re-enable input
+        const input = document.getElementById('manualInput');
+        if (input) input.disabled = false;
+        return;
+    }
+    
+    console.log('Checking answer:', userInput, 'vs correct:', currentWord.word);
+    
+    if (userInput === currentWord.word) {
+        // Update statistics
+        updateCorrectAnswer();
+        
+        // Show celebration popup and confetti
+        showCelebration(currentWord.word);
+        
+        // Auto-advance to next question after delay
+        setTimeout(() => {
+            nextWord();
+        }, 2500);
+    } else {
+        // Update statistics
+        updateWrongAnswer();
+        
+        // Show wrong answer popup
+        showWrongAnswer();
+        
+        // Re-enable input after delay
+        setTimeout(() => {
+            const input = document.getElementById('manualInput');
+            if (input) {
+                input.disabled = false;
+                input.value = '';
+            }
+            
+            // Clear letter slots as well
+            const slots = document.querySelectorAll('.letter-slot');
+            slots.forEach(slot => {
+                slot.textContent = '';
+                slot.classList.remove('filled');
+            });
+        }, 2000);
+    }
+}
+
+// Clear manual input
+function clearManualInput() {
+    const input = document.getElementById('manualInput');
+    if (input) {
+        input.value = '';
+        input.focus();
+    }
+    // Clear slots as well
+    const slots = document.querySelectorAll('.letter-slot');
+    slots.forEach(slot => {
+        slot.textContent = '';
+        slot.classList.remove('filled');
+    });
+}
+
+// Handle input typing in real-time
+function handleInputTyping(inputElement) {
+    const value = inputElement.value.toUpperCase().trim();
+    const slots = document.querySelectorAll('.letter-slot');
+    const maxLetters = currentWord.word.length;
+    
+    // Clear all slots first
+    slots.forEach(slot => {
+        slot.textContent = '';
+        slot.classList.remove('filled');
+    });
+    
+    // Fill slots with typed letters
+    for (let i = 0; i < Math.min(value.length, maxLetters); i++) {
+        if (slots[i]) {
+            slots[i].textContent = value[i];
+            slots[i].classList.add('filled');
+        }
+    }
+    
+    // Auto-submit if word is complete (same length as answer), regardless of correctness
+    // The correctness will be checked in submitManualInput()
+    if (value.length === maxLetters) {
+        setTimeout(() => {
+            submitManualInput();
+        }, 300);
+    }
 }
 
 function checkAnswer() {
@@ -1160,17 +1367,45 @@ function backToMenu() {
 function speakWord(word) {
     if (!soundEnabled) return;
     
+    // Store whether background music was playing
+    const wasMusicPlaying = musicEnabled && backgroundMusic && !backgroundMusic.paused;
+    
+    // Pause background music temporarily so user can hear clearly
+    if (wasMusicPlaying) {
+        backgroundMusic.pause();
+        console.log('Background music paused for word pronunciation');
+    }
+    
     // Try to play MP3 file first
     const audioFile = `audio/${word}.mp3`;
     const audio = new Audio(audioFile);
+    
+    // Resume background music when word audio finishes
+    const resumeBackgroundMusic = () => {
+        if (wasMusicPlaying) {
+            backgroundMusic.play().catch(e => {
+                console.warn('Could not resume background music:', e);
+            });
+            console.log('Background music resumed after word pronunciation');
+        }
+    };
     
     audio.addEventListener('canplaythrough', () => {
         audio.play();
     });
     
+    audio.addEventListener('ended', () => {
+        console.log('Word audio finished, resuming background music');
+        resumeBackgroundMusic();
+    });
+    
     audio.addEventListener('error', () => {
+        console.log('Word audio file not found, using fallback speech');
         // Fallback to Web Speech API if MP3 not found
-        fallbackToSpeech(word);
+        fallbackToSpeech(word, () => {
+            // Resume after speech finishes
+            setTimeout(resumeBackgroundMusic, 1000);
+        });
     });
     
     // Start loading the audio
@@ -1180,14 +1415,80 @@ function speakWord(word) {
 // Simplified audio system - no complex caching
 
 // Fallback to Web Speech API
-function fallbackToSpeech(word) {
+function fallbackToSpeech(word, onEndCallback) {
     if ('speechSynthesis' in window) {
         const utterance = new SpeechSynthesisUtterance(word);
         utterance.lang = 'id-ID'; // Indonesian
         utterance.rate = 0.8; // Slower for kids
         utterance.pitch = 1.2; // Higher pitch for kids
+        
+        // Add event listener for when speech ends
+        utterance.onend = () => {
+            console.log('Speech synthesis finished');
+            if (onEndCallback) {
+                onEndCallback();
+            }
+        };
+        
         speechSynthesis.speak(utterance);
     }
+}
+
+// Keyboard Support
+function setupKeyboardSupport() {
+    document.addEventListener('keydown', (e) => {
+        // Only handle keys when game is running
+        if (!currentWord) return;
+        
+        // Handle dialog keys first (Escape for dialogs)
+        const skipDialog = document.querySelector('.skip-dialog-overlay');
+        const diffDialog = document.querySelector('.difficulty-dialog-overlay');
+        if (skipDialog || diffDialog) {
+            if (e.key === 'Escape') {
+                if (skipDialog) closeSkipDialog();
+                if (diffDialog) closeDifficultyDialog();
+            } else if (e.key === 'Enter') {
+                if (skipDialog) confirmSkip();
+                if (diffDialog) {
+                    const confirmBtn = diffDialog.querySelector('.difficulty-confirm-btn');
+                    if (confirmBtn) {
+                        const difficulty = confirmBtn.getAttribute('onclick').match(/'([^']+)'/)[1];
+                        confirmDifficultyChange(difficulty);
+                    }
+                }
+            }
+            return;
+        }
+        
+        // Manual input mode: redirect letter keys to input field
+        if (answerMode === 'input' && currentWord) {
+            const input = document.getElementById('manualInput');
+            if (input) {
+                // Allow letters (A-Z), Enter, Backspace
+                const isLetterKey = /^[a-zA-Z]$/.test(e.key);
+                const isEnterKey = e.key === 'Enter';
+                const isBackspace = e.key === 'Backspace';
+                
+                if (isLetterKey || isEnterKey || isBackspace) {
+                    // Ensure input is focused
+                    if (document.activeElement !== input) {
+                        input.focus();
+                    }
+                    // Handle Enter key submission
+                    if (isEnterKey) {
+                        e.preventDefault();
+                        submitManualInput();
+                    }
+                    return;
+                }
+            }
+        }
+        
+        // Skip question with S key (only in click mode or if not typing)
+        if ((e.key === 's' || e.key === 'S') && answerMode !== 'input') {
+            skipQuestion();
+        }
+    });
 }
 
 // Sound Effects
