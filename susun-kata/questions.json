@@ -775,5 +775,138 @@
         "imageUrl": "",
         "hint": "Tanaman tumbuh menjadi besar",
         "difficulty": "hard"
+    },
+    {
+        "word": "KELUARGA",
+        "emoji": "👨‍👩‍👧‍👦",
+        "imageUrl": "",
+        "hint": "Ayah, ibu, dan anak-anak",
+        "difficulty": "hard"
+    },
+    {
+        "word": "PENGUIN",
+        "emoji": "🐧",
+        "imageUrl": "",
+        "hint": "Burung yang tidak bisa terbang dari kutub",
+        "difficulty": "hard"
+    },
+    {
+        "word": "MENTEGA",
+        "emoji": "🧈",
+        "imageUrl": "",
+        "hint": "Olesan roti berwarna kuning",
+        "difficulty": "hard"
+    },
+    {
+        "word": "KERANJANG",
+        "emoji": "🧺",
+        "imageUrl": "",
+        "hint": "Wadah untuk membawa barang",
+        "difficulty": "hard"
+    },
+    {
+        "word": "HELIKOPTER",
+        "emoji": "🚁",
+        "imageUrl": "",
+        "hint": "Pesawat dengan baling-baling di atas",
+        "difficulty": "hard"
+    },
+    {
+        "word": "PELAJAR",
+        "emoji": "🧑‍🎓",
+        "imageUrl": "",
+        "hint": "Orang yang belajar di sekolah",
+        "difficulty": "hard"
+    },
+    {
+        "word": "AMBULANS",
+        "emoji": "🚑",
+        "imageUrl": "",
+        "hint": "Mobil untuk membawa orang sakit",
+        "difficulty": "hard"
+    },
+    {
+        "word": "KELERENG",
+        "emoji": "⚪",
+        "imageUrl": "",
+        "hint": "Mainan bulat kecil dari kaca",
+        "difficulty": "hard"
+    },
+    {
+        "word": "BERANDA",
+        "emoji": "🏡",
+        "imageUrl": "",
+        "hint": "Bagian depan rumah untuk duduk-duduk",
+        "difficulty": "hard"
+    },
+    {
+        "word": "RESTORAN",
+        "emoji": "🍽️",
+        "imageUrl": "",
+        "hint": "Tempat makan di luar rumah",
+        "difficulty": "hard"
+    },
+    {
+        "word": "PEGUNUNGAN",
+        "emoji": "⛰️",
+        "imageUrl": "",
+        "hint": "Wilayah dengan banyak gunung",
+        "difficulty": "hard"
+    },
+    {
+        "word": "BELALANG",
+        "emoji": "🦗",
+        "imageUrl": "",
+        "hint": "Serangga hijau yang bisa melompat",
+        "difficulty": "hard"
+    },
+    {
+        "word": "KAKATUA",
+        "emoji": "🦜",
+        "imageUrl": "",
+        "hint": "Burung berwarna-warni yang bisa bicara",
+        "difficulty": "hard"
+    },
+    {
+        "word": "KELELAWAR",
+        "emoji": "🦇",
+        "imageUrl": "",
+        "hint": "Hewan yang terbang di malam hari",
+        "difficulty": "hard"
+    },
+    {
+        "word": "MENTIMUN",
+        "emoji": "🥒",
+        "imageUrl": "",
+        "hint": "Sayuran panjang berwarna hijau",
+        "difficulty": "hard"
+    },
+    {
+        "word": "SAYURAN",
+        "emoji": "🥗",
+        "imageUrl": "",
+        "hint": "Makanan sehat dari tumbuhan",
+        "difficulty": "hard"
+    },
+    {
+        "word": "TIMBANGAN",
+        "emoji": "⚖️",
+        "imageUrl": "",
+        "hint": "Alat untuk mengukur berat",
+        "difficulty": "hard"
+    },
+    {
+        "word": "PEGAWAI",
+        "emoji": "👔",
+        "imageUrl": "",
+        "hint": "Orang yang bekerja di kantor",
+        "difficulty": "hard"
+    },
+    {
+        "word": "TENTARA",
+        "emoji": "🪖",
+        "imageUrl": "",
+        "hint": "Prajurit yang menjaga negara",
+        "difficulty": "hard"
     }
 ]

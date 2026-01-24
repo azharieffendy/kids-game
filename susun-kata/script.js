@@ -30,6 +30,27 @@ const DOM = {
     progressBar: null
 };
 
+// ========================================
+// SECURITY UTILITIES
+// ========================================
+
+/**
+ * Escapes HTML special characters to prevent XSS attacks
+ * @param {string} unsafe - The untrusted string that may contain HTML
+ * @returns {string} - HTML-safe string with special characters escaped
+ */
+function escapeHtml(unsafe) {
+    if (typeof unsafe !== 'string') {
+        return '';
+    }
+    return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
 // Game State
 let wordBuildingContent = [];
 let currentLevel = 0;
@@ -70,7 +91,7 @@ class AudioSystem {
         try {
             this.ctx = new (window.AudioContext || window.webkitAudioContext)();
         } catch (e) {
-            console.warn('AudioContext not available:', e);
+            // AudioContext not available - silent fail
         }
     }
 
@@ -103,7 +124,7 @@ class AudioSystem {
                 oscillator.stop(ctx.currentTime + index * 0.1 + duration);
             });
         } catch (e) {
-            console.warn('Error playing notes:', e);
+            // Error playing notes - silent fail
         }
     }
 
@@ -130,7 +151,7 @@ class AudioSystem {
             oscillator.start(ctx.currentTime);
             oscillator.stop(ctx.currentTime + duration + 0.1);
         } catch (e) {
-            console.warn('Error playing sweep:', e);
+            // Error playing sweep - silent fail
         }
     }
 
@@ -157,7 +178,7 @@ class AudioSystem {
             oscillator.start(ctx.currentTime);
             oscillator.stop(ctx.currentTime + 0.05);
         } catch (e) {
-            console.warn('Error playing click:', e);
+            // Error playing click - silent fail
         }
     }
 }
@@ -183,9 +204,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     initBackgroundMusic();
     createBackgroundParticles();
     setupKeyboardSupport();
-
-    // Log device info for debugging
-    console.log('Device Info:', { isMobile, isTablet, isLowEndDevice, prefersReducedMotion, particleConfig: PARTICLE_CONFIG });
 });
 
 // Cache DOM elements for better performance
@@ -304,17 +322,14 @@ async function loadQuestions() {
             
             // Check if JSON is empty or invalid
             if (!data || !Array.isArray(data) || data.length === 0) {
-                console.error('questions.json is empty or invalid');
                 wordBuildingContent = getDefaultQuestions();
             } else {
                 wordBuildingContent = data;
             }
         } else {
-            console.error('Failed to load questions.json (status:', response.status, ')');
             wordBuildingContent = getDefaultQuestions();
         }
     } catch (error) {
-        console.error('Error loading questions.json:', error);
         wordBuildingContent = getDefaultQuestions();
     }
 }
@@ -329,15 +344,6 @@ function getDefaultQuestions() {
 }
 
 // Save custom questions to localStorage
-function saveCustomQuestions() {
-    try {
-        localStorage.setItem('customQuestions', JSON.stringify(wordBuildingContent));
-    } catch (e) {
-        console.warn('Cannot save custom questions to localStorage:', e);
-        alert('Cannot save questions. Storage may be full or disabled.');
-    }
-}
-
 // Load saved progress
 function loadProgress() {
     const savedStats = localStorage.getItem('gameStats');
@@ -345,7 +351,7 @@ function loadProgress() {
         try {
             gameStats = JSON.parse(savedStats);
         } catch (e) {
-            console.error('Error loading stats:', e);
+            // Error loading stats - use defaults
         }
     }
 }
@@ -378,7 +384,6 @@ function loadSoundSettings() {
             currentBackgroundMusic = savedBackgroundMusic;
         }
     } catch (e) {
-        console.warn('Cannot load sound settings from localStorage:', e);
         // Use default values
         soundEnabled = true;
         musicEnabled = true;
@@ -424,7 +429,6 @@ function saveSoundSettings() {
         localStorage.setItem('visualTheme', currentVisualTheme);
         localStorage.setItem('backgroundMusic', currentBackgroundMusic);
     } catch (e) {
-        console.warn('Cannot save sound settings to localStorage:', e);
         alert('Cannot save settings. Storage may be full or disabled.');
     }
 }
@@ -515,15 +519,9 @@ function playBackgroundMusic() {
         backgroundMusic.src = musicPath;
         backgroundMusic.load();
         backgroundMusic.play().then(() => {
-            console.log('Background music playing successfully');
+            // Background music playing
         }).catch(e => {
-            console.warn('Could not play background music:', e);
-            console.warn('Error details:', {
-                src: backgroundMusic.src,
-                error: e,
-                currentTime: backgroundMusic.currentTime,
-                readyState: backgroundMusic.readyState
-            });
+            // Could not play background music - silent fail
         });
     }
 }
@@ -732,15 +730,12 @@ function saveProgress() {
     try {
         localStorage.setItem('gameStats', JSON.stringify(gameStats));
     } catch (e) {
-        console.warn('localStorage not available:', e);
         // Fallback to sessionStorage
         if (typeof sessionStorage !== 'undefined') {
             try {
                 sessionStorage.setItem('gameStats', JSON.stringify(gameStats));
             } catch (se) {
-                console.warn('sessionStorage also not available:', se);
                 // In-memory fallback (stats will reset on refresh)
-                console.warn('Stats will reset on page refresh');
             }
         }
     }
@@ -814,157 +809,8 @@ function updateProgressBar() {
     }
 }
 
-// Show Admin Panel
-function showAdminPanel() {
-    // Hide stats container
-    const statsContainer = document.querySelector('.stats-container');
-    if (statsContainer) {
-        statsContainer.classList.remove('visible');
-    }
-
-    // Hide progress container
-    const progressContainer = document.getElementById('progressContainer');
-    if (progressContainer) {
-        progressContainer.style.display = 'none';
-    }
-
-    const content = document.getElementById('game-content');
-    const questionsList = wordBuildingContent.map((q, index) => {
-        const displayIcon = q.emoji 
-            ? `<span class="question-emoji">${q.emoji}</span>` 
-            : (q.imageUrl ? `<span class="question-emoji">🖼️</span>` : `<span class="question-emoji">❓</span>`);
-        const displayNote = q.emoji 
-            ? '' 
-            : (q.imageUrl ? `<br><small>🖼️ Gambar URL: ${q.imageUrl.substring(0, 40)}...</small>` : '<br><small>⚠️ Tidak ada emoji atau gambar</small>');
-        
-        return `
-            <div class="admin-question-item">
-                <div class="question-info">
-                    ${displayIcon}
-                    <strong>${q.word}</strong> - ${q.hint}
-                    ${displayNote}
-                </div>
-                <div class="question-actions">
-                    <button onclick="editQuestion(${index})" class="edit-btn-small">✏️</button>
-                    <button onclick="deleteQuestion(${index})" class="delete-btn-small">🗑️</button>
-                </div>
-            </div>
-        `;
-    }).join('');
-    
-    content.innerHTML = `
-        <div class="admin-panel">
-            <h2>⚙️ Kelola Pertanyaan</h2>
-            <p>Total pertanyaan: ${wordBuildingContent.length}</p>
-            <p style="font-size: 0.9em; color: #666; margin-bottom: 20px;">
-                💡 <strong>Prioritas tampilan:</strong> Jika ada emoji, tampilkan emoji. Jika tidak ada emoji, tampilkan gambar URL.
-            </p>
-            
-            <div class="admin-actions">
-                <button onclick="showAddQuestionForm()" class="admin-btn">➕ Tambah Pertanyaan</button>
-                <button onclick="resetToDefault()" class="admin-btn">🔄 Reset ke Default</button>
-                <button onclick="location.reload()" class="admin-btn">🏠 Kembali</button>
-            </div>
-            
-            <div class="questions-list">
-                ${questionsList}
-            </div>
-        </div>
-    `;
-}
-
-// Show add question form
-function showAddQuestionForm(editIndex = null) {
-    const isEdit = editIndex !== null;
-    const question = isEdit ? wordBuildingContent[editIndex] : { word: '', emoji: '📖', imageUrl: '', hint: '' };
-    
-    const content = document.getElementById('game-content');
-    content.innerHTML = `
-        <div class="admin-panel">
-            <h2>${isEdit ? '✏️ Edit' : '➕ Tambah'} Pertanyaan</h2>
-            <form class="question-form" onsubmit="saveQuestion(event, ${editIndex})">
-                <div class="form-group">
-                    <label>Kata (huruf besar):</label>
-                    <input type="text" id="wordInput" value="${question.word}" required 
-                           pattern="[A-Z]+" title="Gunakan huruf besar saja">
-                </div>
-                
-                <div class="form-group">
-                    <label>Emoji (prioritas utama):</label>
-                    <input type="text" id="emojiInput" value="${question.emoji}" 
-                           placeholder="Contoh: 🐱">
-                    <small>Emoji akan ditampilkan jika diisi. Kosongkan jika ingin pakai gambar URL.</small>
-                </div>
-                
-                <div class="form-group">
-                    <label>URL Gambar (jika tidak ada emoji):</label>
-                    <input type="url" id="imageUrlInput" value="${question.imageUrl}" 
-                           placeholder="https://example.com/image.jpg">
-                    <small>Gambar hanya ditampilkan jika emoji kosong</small>
-                </div>
-                
-                <div class="form-group">
-                    <label>Petunjuk:</label>
-                    <input type="text" id="hintInput" value="${question.hint}" required>
-                </div>
-                
-                <div class="form-actions">
-                    <button type="submit" class="admin-btn">💾 Simpan</button>
-                    <button type="button" onclick="showAdminPanel()" class="admin-btn">❌ Batal</button>
-                </div>
-            </form>
-        </div>
-    `;
-}
-
-// Save question
-function saveQuestion(event, editIndex) {
-    event.preventDefault();
-    
-    const word = document.getElementById('wordInput').value.toUpperCase();
-    const emoji = document.getElementById('emojiInput').value.trim();
-    const imageUrl = document.getElementById('imageUrlInput').value.trim();
-    const hint = document.getElementById('hintInput').value;
-    
-    if (!emoji && !imageUrl) {
-        alert('Harus ada emoji ATAU gambar URL!');
-        return;
-    }
-    
-    const newQuestion = { word, emoji, imageUrl, hint };
-    
-    if (editIndex !== null) {
-        wordBuildingContent[editIndex] = newQuestion;
-    } else {
-        wordBuildingContent.push(newQuestion);
-    }
-    
-    saveCustomQuestions();
-    showAdminPanel();
-}
-
-// Edit question
-function editQuestion(index) {
-    showAddQuestionForm(index);
-}
-
-// Delete question
-function deleteQuestion(index) {
-    if (confirm(`Hapus pertanyaan "${wordBuildingContent[index].word}"?`)) {
-        wordBuildingContent.splice(index, 1);
-        saveCustomQuestions();
-        showAdminPanel();
-    }
-}
 
 // Reset to default
-function resetToDefault() {
-    if (confirm('Reset semua pertanyaan ke default? Perubahan kustom akan hilang.')) {
-        localStorage.removeItem('customQuestions');
-        location.reload();
-    }
-}
-
 // Shuffle array
 function shuffleArray(array) {
     const newArray = [...array];
@@ -999,6 +845,9 @@ function showCelebration(word) {
     // Create simple confetti
     createSimpleConfetti();
 
+    // Escape user input to prevent XSS
+    const safeWord = escapeHtml(word);
+
     // Create celebration popup
     const popup = document.createElement('div');
     popup.className = 'celebration-popup';
@@ -1006,7 +855,7 @@ function showCelebration(word) {
         <div class="celebration-content">
             <div class="celebration-emoji">${celebration.emoji}</div>
             <div class="celebration-text">${celebration.text}</div>
-            <div class="celebration-word">${word}</div>
+            <div class="celebration-word">${safeWord}</div>
             <div class="celebration-subtext">${celebration.subtext}</div>
         </div>
     `;
@@ -1177,24 +1026,33 @@ async function showWordGame() {
     
     const content = document.getElementById('game-content');
     
+    // Escape user input to prevent XSS
+    const safeEmoji = escapeHtml(currentWord.emoji);
+    const safeImageUrl = escapeHtml(currentWord.imageUrl);
+    const safeWord = escapeHtml(currentWord.word);
+    const safeHint = escapeHtml(currentWord.hint);
+    
     const imageDisplay = currentWord.emoji 
-        ? `<div class="emoji">${currentWord.emoji}</div>`
+        ? `<div class="emoji">${safeEmoji}</div>`
         : (currentWord.imageUrl 
-            ? `<img src="${currentWord.imageUrl}" alt="${currentWord.word}" class="word-image">` 
+            ? `<img src="${safeImageUrl}" alt="${safeWord}" class="word-image">` 
             : `<div class="emoji">❓</div>`);
     
     // Update difficulty display in header
     updateDifficultyDisplay();
     
     // Render game (simplified without complex audio detection)
-    renderGame(currentWord.word, imageDisplay, currentWord.hint);
+    renderGame(currentWord.word, imageDisplay, safeHint);
 }
 
 // Render game (simplified version)
 function renderGame(word, imageDisplay, hint) {
+    // Escape word for use in attributes to prevent attribute injection
+    const safeWordAttr = escapeHtml(word);
+    
     // Always show voice button - will handle audio detection in speakWord function
     const voiceButton = `
-        <button class="voice-btn" onclick="speakWord('${word}')" title="Dengar pengucapan">
+        <button class="voice-btn" onclick="speakWord('${safeWordAttr}')" title="Dengar pengucapan">
             🔊 Dengar
         </button>
     `;
@@ -1243,6 +1101,7 @@ function renderGame(word, imageDisplay, hint) {
         }, 200);
     } else {
         // Click mode (original)
+        // Escape letters for use in attributes
         content.innerHTML = `
             <div class="word-game">
                 <div class="picture-display">
@@ -1258,11 +1117,14 @@ function renderGame(word, imageDisplay, hint) {
                 </div>
                 
                 <div class="letter-options" id="letterOptions">
-                    ${availableLetters.map((letter, index) => `
-                        <button class="letter-btn" onclick="selectLetter('${letter}', ${index})" id="letter-${index}">
-                            ${letter}
+                    ${availableLetters.map((letter, index) => {
+                        const safeLetter = escapeHtml(letter);
+                        return `
+                        <button class="letter-btn" onclick="selectLetter('${safeLetter}', ${index})" id="letter-${index}">
+                            ${safeLetter}
                         </button>
-                    `).join('')}
+                    `;
+                    }).join('')}
                 </div>
                 
                 <div class="action-buttons">
@@ -1348,7 +1210,7 @@ function setAnswerMode(mode) {
     try {
         localStorage.setItem('answerMode', mode);
     } catch (e) {
-        console.warn('Cannot save answer mode to localStorage:', e);
+        // Cannot save answer mode - silent fail
     }
 }
 
@@ -1367,7 +1229,7 @@ function loadAnswerMode() {
             });
         }
     } catch (e) {
-        console.warn('Cannot load answer mode from localStorage:', e);
+        // Cannot load answer mode - use default
     }
 }
 
@@ -1403,7 +1265,6 @@ function checkManualAnswer(userInput) {
     
     // Validate words
     if (!validateWord(userInput) || !validateWord(currentWord.word)) {
-        console.warn('Invalid word detected:', { userInput, currentWord });
         // Re-enable input
         const input = document.getElementById('manualInput');
         if (input) input.disabled = false;
@@ -1521,7 +1382,6 @@ function checkAnswer() {
     
     // Validate formed word
     if (!validateWord(formedWord) || !validateWord(currentWord.word)) {
-        console.warn('Invalid word detected:', { formedWord, currentWord });
         return;
     }
     
@@ -1692,7 +1552,7 @@ function speakWord(word) {
     const resumeBackgroundMusic = () => {
         if (wasMusicPlaying) {
             backgroundMusic.play().catch(e => {
-                console.warn('Could not resume background music:', e);
+                // Could not resume background music - silent fail
             });
         }
     };

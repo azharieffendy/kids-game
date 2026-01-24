@@ -133,23 +133,16 @@ const Game = (() => {
         // Play audio file
         if(this.bgAudioElement){
           const musicPath = `../audio/backsound/${this.currentBackgroundMusic}.mp3`;
-          console.log('Math game: Attempting to play background music:', musicPath);
           this.bgAudioElement.src = musicPath;
           this.bgAudioElement.load();
           this.bgAudioElement.play().then(() => {
-            console.log('Math game: Background music playing successfully');
+            // Music playing successfully
           }).catch(e => {
-            console.log('Math game: Could not play background music:', e);
-            console.warn('Error details:', {
-              src: this.bgAudioElement.src,
-              error: e,
-              currentTime: this.bgAudioElement.currentTime,
-              readyState: this.bgAudioElement.readyState
-            });
+            // Could not play background music - silent fail
           });
         }
       }catch(e){
-        console.log('Math game: Music not available:', e);
+        // Music not available - silent fail
       }
     }
     
@@ -633,7 +626,6 @@ const Game = (() => {
     
     // Validate input before processing
     if (!validateManualInput(inputValue)) {
-      console.warn('Invalid input:', inputValue);
       refs.answerInput.classList.add('error');
       setTimeout(() => refs.answerInput.classList.remove('error'), 500);
       return;
