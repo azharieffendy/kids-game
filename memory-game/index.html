@@ -62,21 +62,27 @@
                         <h2>Mari Bermain!</h2>
                         <p>Klik kartu untuk menemukan pasangan yang sama</p>
 
-                        <div class="difficulty-selection">
-                            <h3>Pilih Tingkat Kesulitan:</h3>
-                            <div class="difficulty-buttons">
-                                <button class="difficulty-btn easy" onclick="startGame('easy')" title="8 kartu (4 pasang)">
-                                    😊 Mudah
-                                    <small>(4×2 kartu)</small>
-                                </button>
-                                <button class="difficulty-btn medium" onclick="startGame('medium')" title="16 kartu (8 pasang)">
-                                    🤔 Sedang
-                                    <small>(4×4 kartu)</small>
-                                </button>
-                                <button class="difficulty-btn hard" onclick="startGame('hard')" title="24 kartu (12 pasang)">
-                                    🧠 Sulit
-                                    <small>(4×6 kartu)</small>
-                                </button>
+                        <div class="grid-size-selection">
+                            <h3>Pilih Ukuran Grid:</h3>
+                            <div class="grid-select-container">
+                                <select id="gridSizeSelect" class="grid-select" onchange="updateGridFromSelect(this.value)">
+                                    <optgroup label="Mudah (Easy)">
+                                        <option value="2,2">2 × 2 (4 kartu)</option>
+                                        <option value="3,2">3 × 2 (6 kartu)</option>
+                                        <option value="4,2">4 × 2 (8 kartu)</option>
+                                    </optgroup>
+                                    <optgroup label="Sedang (Medium)">
+                                        <option value="3,4">3 × 4 (12 kartu)</option>
+                                        <option value="4,4" selected>4 × 4 (16 kartu)</option>
+                                        <option value="5,4">5 × 4 (20 kartu)</option>
+                                        <option value="6,4">6 × 4 (24 kartu)</option>
+                                    </optgroup>
+                                    <optgroup label="Sulit (Hard)">
+                                        <option value="5,6">5 × 6 (30 kartu)</option>
+                                        <option value="6,6">6 × 6 (36 kartu)</option>
+                                        <option value="7,6">7 × 6 (42 kartu)</option>
+                                    </optgroup>
+                                </select>
                             </div>
                         </div>
 
@@ -96,6 +102,11 @@
                                     😀 Emoji
                                 </button>
                             </div>
+                        </div>
+                        
+                        <div class="start-game-button">
+                            <button class="start-btn" onclick="startGame()">🎮 Mulai Game</button>
+                            <button class="stats-btn" onclick="showStatistics()">📊 Statistik</button>
                         </div>
                     </div>
                 </div>

@@ -59,12 +59,26 @@ class AudioSystem {
         return this.ctx;
     }
 
-    playNotes(frequencies, theme = 'fun') {
+    getThemeSound(visualTheme) {
+        // Map visual themes to sound characteristics
+        const themeSounds = {
+            'default': { type: 'triangle', gain: 0.18, duration: 0.3, delay: 0.1 },
+            'cotton-candy': { type: 'sine', gain: 0.2, duration: 0.35, delay: 0.12 },
+            'ocean': { type: 'sine', gain: 0.15, duration: 0.4, delay: 0.15 },
+            'sunset': { type: 'square', gain: 0.16, duration: 0.28, delay: 0.09 },
+            'forest': { type: 'triangle', gain: 0.17, duration: 0.32, delay: 0.11 }
+        };
+        return themeSounds[visualTheme] || themeSounds['default'];
+    }
+
+    playNotes(frequencies, theme = 'fun', visualTheme = 'default') {
         const ctx = this.getContext();
         if (!ctx) return;
 
         try {
+            const themeSound = this.getThemeSound(visualTheme);
             const now = ctx.currentTime;
+            
             frequencies.forEach((freq, i) => {
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
@@ -72,23 +86,13 @@ class AudioSystem {
                 osc.connect(gain);
                 gain.connect(ctx.destination);
 
-                if (theme === 'calm') {
-                    osc.type = 'sine';
-                    gain.gain.setValueAtTime(0.15, now + i * 0.1);
-                    gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.1 + 0.3);
-                } else if (theme === 'exciting') {
-                    osc.type = 'square';
-                    gain.gain.setValueAtTime(0.2, now + i * 0.08);
-                    gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.08 + 0.25);
-                } else {
-                    osc.type = 'triangle';
-                    gain.gain.setValueAtTime(0.18, now + i * 0.1);
-                    gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.1 + 0.3);
-                }
+                osc.type = themeSound.type;
+                gain.gain.setValueAtTime(themeSound.gain, now + i * themeSound.delay);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + i * themeSound.delay + themeSound.duration);
 
-                osc.frequency.setValueAtTime(freq, now + i * 0.1);
-                osc.start(now + i * 0.1);
-                osc.stop(now + i * 0.1 + 0.3);
+                osc.frequency.setValueAtTime(freq, now + i * themeSound.delay);
+                osc.start(now + i * themeSound.delay);
+                osc.stop(now + i * themeSound.delay + themeSound.duration);
             });
         } catch (e) {
             // Error playing notes - silent fail
@@ -186,6 +190,46 @@ class AudioSystem {
             this.playBackgroundMusic();
         }
     }
+
+    playVictoryMusic(visualTheme) {
+        const ctx = this.getContext();
+        if (!ctx) return;
+
+        try {
+            const now = ctx.currentTime;
+            const themeSound = this.getThemeSound(visualTheme);
+            
+            // Theme-specific victory melodies
+            const victoryMelodies = {
+                'default': [523, 659, 784, 1047],
+                'cotton-candy': [523, 587, 659, 784, 880],
+                'ocean': [392, 494, 587, 740],
+                'sunset': [659, 784, 880, 1047],
+                'forest': [440, 523, 659, 784]
+            };
+            
+            const melody = victoryMelodies[visualTheme] || victoryMelodies['default'];
+            
+            melody.forEach((freq, i) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                osc.type = themeSound.type;
+                osc.frequency.setValueAtTime(freq, now + i * 0.15);
+                
+                gain.gain.setValueAtTime(0.3, now + i * 0.15);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.15 + 0.4);
+
+                osc.start(now + i * 0.15);
+                osc.stop(now + i * 0.15 + 0.4);
+            });
+        } catch (e) {
+            // Error playing victory music - silent fail
+        }
+    }
 }
 
 const audioSystem = new AudioSystem();
@@ -194,17 +238,18 @@ const audioSystem = new AudioSystem();
 // CARD THEMES DATA
 // ========================================
 const CARD_THEMES = {
-    animals: ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮'],
-    fruits: ['🍎', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🍑', '🍒', '🍍', '🥝', '🥭'],
-    vehicles: ['🚗', '🚕', '🚙', '🚌', '🚎', '🏎️', '🚓', '🚑', '🚒', '🚐', '🚚', '🚛'],
-    emojis: ['😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '😊', '😇', '😍']
+    animals: ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐵', '🐔', '🐧', '🐦', '🐤', '🐣', '🦆', '🦅', '🦉', '🦇', '🐺', '🐗', '🐴', '🦄', '🐝', '🐛', '🦋', '🐌', '🐞', '🐜', '🦟', '🦗', '🕷️', '🦂', '🐢', '🐍', '🦎', '🦖', '🦕', '🐙', '🦑', '🦐', '🦞', '🦀', '🐡', '🐠'],
+    fruits: ['🍎', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🍑', '🍒', '🍍', '🥝', '🥭', '🍈', '🍏', '🍐', '🥑', '🍅', '🌶️', '🥕', '🌽', '🥦', '🥒', '🥬', '🍆', '🥔', '🍠', '🥜', '🌰', '🥥', '🥨', '🥐', '🥖', '🥞', '🧇', '🧀', '🥚', '🍳', '🥓', '🥩', '🍗', '🍖', '🌭', '🍔', '🍟', '🍕', '🥪', '🥙', '🌮', '🌯', '🥗'],
+    vehicles: ['🚗', '🚕', '🚙', '🚌', '🚎', '🏎️', '🚓', '🚑', '🚒', '🚐', '🚚', '🚛', '🚜', '🛴', '🚲', '🛵', '🏍️', '🛺', '🚔', '🚍', '🚘', '🚖', '🚡', '🚠', '🚟', '🚃', '🚋', '🚞', '🚝', '🚄', '🚅', '🚈', '🚂', '🚆', '🚇', '🚊', '🚉', '✈️', '🛫', '🛬', '🛩️', '💺', '🚁', '🛸', '🚀', '🛰️', '🚢', '⛵', '🛶', '🚤'],
+    emojis: ['😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '😊', '😇', '😍', '🥰', '😘', '😗', '😙', '😚', '😋', '😛', '😜', '🤪', '😝', '🤑', '🤗', '🤭', '🤫', '🤔', '🤐', '🤨', '😐', '😑', '😶', '😏', '😒', '🙄', '😬', '🤥', '😌', '😔', '😪', '🤤', '😴', '😷', '🤒', '🤕', '🤢', '🤮', '🤧', '🥵', '🥶']
 };
 
 // ========================================
 // GAME STATE
 // ========================================
 let gameState = {
-    difficulty: 'easy',
+    gridCols: 4,
+    gridRows: 4,
     cardTheme: 'animals',
     cards: [],
     flippedCards: [],
@@ -216,6 +261,13 @@ let gameState = {
     musicEnabled: true,
     soundTheme: 'fun',
     visualTheme: 'default'
+};
+
+// Statistics tracking
+let gameStats = {
+    totalGamesPlayed: 0,
+    totalGamesWon: 0,
+    gridStats: {} // Format: "4x4": { games: 0, totalTime: 0, bestTime: null }
 };
 
 // ========================================
@@ -270,6 +322,26 @@ function createConfetti() {
         document.body.appendChild(confetti);
 
         setTimeout(() => confetti.remove(), 3000);
+    }
+}
+
+// ========================================
+// GRID SIZE FUNCTIONS
+// ========================================
+function updateGridFromSelect(value) {
+    const [cols, rows] = value.split(',').map(Number);
+    gameState.gridCols = cols;
+    gameState.gridRows = rows;
+}
+
+function selectGridSize(cols, rows) {
+    gameState.gridCols = cols;
+    gameState.gridRows = rows;
+
+    // Update select if it exists
+    const select = document.getElementById('gridSizeSelect');
+    if (select) {
+        select.value = `${cols},${rows}`;
     }
 }
 
@@ -373,30 +445,45 @@ function loadSettings() {
     }
 }
 
+function loadStats() {
+    try {
+        const saved = localStorage.getItem('memoryGameStats');
+        if (saved) {
+            gameStats = JSON.parse(saved);
+        }
+    } catch (e) {
+        // Cannot load stats - use defaults
+    }
+}
+
+function saveStats() {
+    try {
+        localStorage.setItem('memoryGameStats', JSON.stringify(gameStats));
+    } catch (e) {
+        // Cannot save stats - silent fail
+    }
+}
+
 // ========================================
 // GAME LOGIC
 // ========================================
-function startGame(difficulty) {
-    gameState.difficulty = difficulty;
+function startGame() {
     gameState.matchedPairs = 0;
     gameState.moves = 0;
     gameState.flippedCards = [];
     gameState.startTime = Date.now();
+    
+    // Track game start
+    gameStats.totalGamesPlayed++;
 
-    // Determine grid size
-    const gridSizes = {
-        easy: 8,    // 4x2
-        medium: 16, // 4x4
-        hard: 24    // 4x6
-    };
-
-    const cardCount = gridSizes[difficulty];
+    const cardCount = gameState.gridCols * gameState.gridRows;
     const pairsNeeded = cardCount / 2;
 
     // Get cards from selected theme
     const themeCards = CARD_THEMES[gameState.cardTheme];
     const selectedCards = themeCards.slice(0, pairsNeeded);
     const cardPairs = [...selectedCards, ...selectedCards];
+    
     gameState.cards = shuffleArray(cardPairs).map((emoji, index) => ({
         id: index,
         emoji: emoji,
@@ -416,8 +503,10 @@ function startGame(difficulty) {
 
 function renderGame() {
     const content = document.getElementById('game-content');
-    const gridClass = gameState.difficulty === 'easy' ? 'grid-4x2' :
-                      gameState.difficulty === 'medium' ? 'grid-4x4' : 'grid-4x6';
+
+    // Calculate grid class based on grid size
+    const gridSize = gameState.gridCols * gameState.gridRows;
+    let gridClass = 'grid-dynamic';
 
     const cardsHtml = gameState.cards.map(card => `
         <div class="card ${card.isFlipped ? 'flipped' : ''} ${card.isMatched ? 'matched' : ''}"
@@ -439,7 +528,7 @@ function renderGame() {
             <div class="game-info">
                 <button class="new-game-btn" onclick="showStartScreen()">🔄 Game Baru</button>
             </div>
-            <div class="card-grid ${gridClass}">
+            <div class="card-grid ${gridClass}" style="grid-template-columns: repeat(${gameState.gridCols}, 1fr); grid-template-rows: repeat(${gameState.gridRows}, 1fr);">
                 ${cardsHtml}
             </div>
         </div>
@@ -482,9 +571,10 @@ function checkForMatch() {
         card1.isMatched = true;
         card2.isMatched = true;
         gameState.matchedPairs++;
+        updateStats();
 
         if (gameState.soundEnabled) {
-            audioSystem.playNotes([523, 659, 784], gameState.soundTheme);
+            audioSystem.playNotes([523, 659, 784], gameState.soundTheme, gameState.visualTheme);
         }
 
         // Mark cards as matched
@@ -501,7 +591,7 @@ function checkForMatch() {
     } else {
         // No match - flip cards back
         if (gameState.soundEnabled) {
-            audioSystem.playNotes([392, 330], gameState.soundTheme);
+            audioSystem.playNotes([392, 330], gameState.soundTheme, gameState.visualTheme);
         }
 
         setTimeout(() => {
@@ -520,8 +610,21 @@ function gameWon() {
     stopTimer();
     const elapsedTime = Math.floor((Date.now() - gameState.startTime) / 1000);
 
+    // Update statistics
+    gameStats.totalGamesWon++;
+    const gridKey = `${gameState.gridCols}x${gameState.gridRows}`;
+    if (!gameStats.gridStats[gridKey]) {
+        gameStats.gridStats[gridKey] = { games: 0, totalTime: 0, bestTime: null };
+    }
+    gameStats.gridStats[gridKey].games++;
+    gameStats.gridStats[gridKey].totalTime += elapsedTime;
+    if (gameStats.gridStats[gridKey].bestTime === null || elapsedTime < gameStats.gridStats[gridKey].bestTime) {
+        gameStats.gridStats[gridKey].bestTime = elapsedTime;
+    }
+    saveStats();
+
     if (gameState.soundEnabled) {
-        audioSystem.playSweep(200, 800, gameState.soundTheme);
+        audioSystem.playVictoryMusic(gameState.visualTheme);
     }
 
     createConfetti();
@@ -552,7 +655,7 @@ function gameWon() {
                         </div>
                     </div>
                     <div class="victory-actions">
-                        <button class="victory-btn" onclick="startGame('${gameState.difficulty}')">🔄 Main Lagi</button>
+                        <button class="victory-btn" onclick="startGame()">🔄 Main Lagi</button>
                         <button class="victory-btn secondary" onclick="showStartScreen()">🏠 Menu Utama</button>
                     </div>
                 </div>
@@ -573,21 +676,27 @@ function showStartScreen() {
             <h2>Mari Bermain!</h2>
             <p>Klik kartu untuk menemukan pasangan yang sama</p>
 
-            <div class="difficulty-selection">
-                <h3>Pilih Tingkat Kesulitan:</h3>
-                <div class="difficulty-buttons">
-                    <button class="difficulty-btn easy" onclick="startGame('easy')" title="8 kartu (4 pasang)">
-                        😊 Mudah
-                        <small>(4×2 kartu)</small>
-                    </button>
-                    <button class="difficulty-btn medium" onclick="startGame('medium')" title="16 kartu (8 pasang)">
-                        🤔 Sedang
-                        <small>(4×4 kartu)</small>
-                    </button>
-                    <button class="difficulty-btn hard" onclick="startGame('hard')" title="24 kartu (12 pasang)">
-                        🧠 Sulit
-                        <small>(4×6 kartu)</small>
-                    </button>
+            <div class="grid-size-selection">
+                <h3>Pilih Ukuran Grid:</h3>
+                <div class="grid-select-container">
+                    <select id="gridSizeSelect" class="grid-select" onchange="updateGridFromSelect(this.value)">
+                        <optgroup label="Mudah (Easy)">
+                            <option value="2,2" ${gameState.gridCols === 2 && gameState.gridRows === 2 ? 'selected' : ''}>2 × 2 (4 kartu)</option>
+                            <option value="3,2" ${gameState.gridCols === 3 && gameState.gridRows === 2 ? 'selected' : ''}>3 × 2 (6 kartu)</option>
+                            <option value="4,2" ${gameState.gridCols === 4 && gameState.gridRows === 2 ? 'selected' : ''}>4 × 2 (8 kartu)</option>
+                        </optgroup>
+                        <optgroup label="Sedang (Medium)">
+                            <option value="3,4" ${gameState.gridCols === 3 && gameState.gridRows === 4 ? 'selected' : ''}>3 × 4 (12 kartu)</option>
+                            <option value="4,4" ${gameState.gridCols === 4 && gameState.gridRows === 4 ? 'selected' : ''}>4 × 4 (16 kartu)</option>
+                            <option value="5,4" ${gameState.gridCols === 5 && gameState.gridRows === 4 ? 'selected' : ''}>5 × 4 (20 kartu)</option>
+                            <option value="6,4" ${gameState.gridCols === 6 && gameState.gridRows === 4 ? 'selected' : ''}>6 × 4 (24 kartu)</option>
+                        </optgroup>
+                        <optgroup label="Sulit (Hard)">
+                            <option value="5,6" ${gameState.gridCols === 5 && gameState.gridRows === 6 ? 'selected' : ''}>5 × 6 (30 kartu)</option>
+                            <option value="6,6" ${gameState.gridCols === 6 && gameState.gridRows === 6 ? 'selected' : ''}>6 × 6 (36 kartu)</option>
+                            <option value="7,6" ${gameState.gridCols === 7 && gameState.gridRows === 6 ? 'selected' : ''}>7 × 6 (42 kartu)</option>
+                        </optgroup>
+                    </select>
                 </div>
             </div>
 
@@ -608,10 +717,100 @@ function showStartScreen() {
                     </button>
                 </div>
             </div>
+            <div class="start-game-button">
+                <button class="start-btn" onclick="startGame()">🎮 Mulai Game</button>
+                <button class="stats-btn" onclick="showStatistics()">📊 Statistik</button>
+            </div>
         </div>
     `;
 
     updateStats();
+}
+
+function showStatistics() {
+    const content = document.getElementById('game-content');
+    
+    const winPercentage = gameStats.totalGamesPlayed > 0 
+        ? Math.round((gameStats.totalGamesWon / gameStats.totalGamesPlayed) * 100) 
+        : 0;
+    
+    // Build grid stats HTML
+    let gridStatsHtml = '';
+    const sortedGrids = Object.keys(gameStats.gridStats).sort((a, b) => {
+        const [aCols, aRows] = a.split('x').map(Number);
+        const [bCols, bRows] = b.split('x').map(Number);
+        return (aCols * aRows) - (bCols * bRows);
+    });
+    
+    if (sortedGrids.length === 0) {
+        gridStatsHtml = '<p style="text-align: center; color: #666; margin-top: 20px;">Belum ada statistik. Mainkan game untuk melihat statistik!</p>';
+    } else {
+        gridStatsHtml = sortedGrids.map(gridKey => {
+            const stats = gameStats.gridStats[gridKey];
+            const avgTime = Math.round(stats.totalTime / stats.games);
+            return `
+                <div class="grid-stat-item">
+                    <div class="grid-stat-header">
+                        <span class="grid-stat-size">${gridKey.replace('x', ' × ')}</span>
+                        <span class="grid-stat-games">${stats.games} game${stats.games > 1 ? 's' : ''}</span>
+                    </div>
+                    <div class="grid-stat-details">
+                        <div class="grid-stat-detail">
+                            <span class="detail-label">Rata-rata:</span>
+                            <span class="detail-value">${formatTime(avgTime)}</span>
+                        </div>
+                        <div class="grid-stat-detail">
+                            <span class="detail-label">Terbaik:</span>
+                            <span class="detail-value">${formatTime(stats.bestTime)}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+    
+    content.innerHTML = `
+        <div class="stats-screen">
+            <h2>📊 Statistik Permainan</h2>
+            
+            <div class="overall-stats">
+                <div class="overall-stat-card">
+                    <div class="stat-number">${gameStats.totalGamesPlayed}</div>
+                    <div class="stat-label">Total Game</div>
+                </div>
+                <div class="overall-stat-card">
+                    <div class="stat-number">${gameStats.totalGamesWon}</div>
+                    <div class="stat-label">Menang</div>
+                </div>
+                <div class="overall-stat-card">
+                    <div class="stat-number">${winPercentage}%</div>
+                    <div class="stat-label">Win Rate</div>
+                </div>
+            </div>
+            
+            <h3 style="margin-top: 30px; margin-bottom: 15px; text-align: center; color: #2c3e50;">Statistik per Ukuran Grid</h3>
+            <div class="grid-stats-list">
+                ${gridStatsHtml}
+            </div>
+            
+            <div class="stats-actions">
+                <button class="victory-btn" onclick="showStartScreen()">🏠 Kembali</button>
+                <button class="victory-btn secondary" onclick="resetStatistics()">🗑️ Reset Statistik</button>
+            </div>
+        </div>
+    `;
+}
+
+function resetStatistics() {
+    if (confirm('Apakah Anda yakin ingin mereset semua statistik?')) {
+        gameStats = {
+            totalGamesPlayed: 0,
+            totalGamesWon: 0,
+            gridStats: {}
+        };
+        saveStats();
+        showStatistics();
+    }
 }
 
 // ========================================
@@ -657,6 +856,7 @@ function backToMenu() {
 // ========================================
 document.addEventListener('DOMContentLoaded', () => {
     loadSettings();
+    loadStats();
     createBackgroundParticles();
     updateStats();
 });
