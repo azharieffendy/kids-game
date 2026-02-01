@@ -14,12 +14,66 @@ const Game = (() => {
   const $ = sel => document.querySelector(sel);
   const $$ = sel => Array.from(document.querySelectorAll(sel));
 
+  // Event listener storage for cleanup
+  const eventListeners = [];
+  const timers = [];
+  const timeouts = [];
+
+  // Helper to add tracked event listeners
+  function addTrackedListener(element, event, handler, options = {}) {
+    element.addEventListener(event, handler, options);
+    eventListeners.push({ element, event, handler, options });
+  }
+
+  // Helper to add tracked timers
+  function addTrackedTimer(id) {
+    timers.push(id);
+  }
+
+  // Helper to add tracked timeouts
+  function addTrackedTimeout(callback, delay) {
+    const id = setTimeout(() => {
+      callback();
+      // Remove from timeouts array after executing
+      const index = timeouts.indexOf(id);
+      if (index > -1) timeouts.splice(index, 1);
+    }, delay);
+    timeouts.push(id);
+    return id;
+  }
+
+  // Cleanup function
+  function cleanup() {
+    // Remove all event listeners
+    eventListeners.forEach(({ element, event, handler, options }) => {
+      element.removeEventListener(event, handler, options);
+    });
+    eventListeners.length = 0;
+
+    // Clear all timers
+    timers.forEach(id => clearInterval(id));
+    timers.length = 0;
+
+    // Clear all timeouts
+    timeouts.forEach(id => clearTimeout(id));
+    timeouts.length = 0;
+
+    // Clear main timer
+    if (state._timer) {
+      clearInterval(state._timer);
+      state._timer = null;
+    }
+
+    // Cleanup audio system
+    if (audio) audio.cleanup();
+  }
+
   const refs = {
     question: $('#question'), answers: $('#answers'), feedback: $('#feedback'),
     score: $('#score'), wrong: $('#wrong'), time: $('#time'), qnum: $('#qnum'),
     startBtn: $('#startBtn'), learningToggle: $('#learningToggle'), musicToggle: $('#musicToggle'),
     pauseBtn: $('#pauseBtn'), soundToggle: $('#soundToggle'), backToMenuBtn: $('#backToMenuBtn'),
-    mascot: $('#mascotSvg'), rewardPopup: $('#rewardPopup'), questionCard: document.querySelector('.question-card'),
+    rewardPopup: $('#rewardPopup'), questionCard: document.querySelector('.question-card'),
     // Timer progress bar
     timerProgress: $('#timerProgress'),
     // Pause screen
@@ -63,14 +117,28 @@ const Game = (() => {
         this.bgAudioElement = new Audio();
         this.bgAudioElement.loop = true;
         this.bgAudioElement.volume = 0.3;
-        
+
         // Add event listener to ensure loop works
-        this.bgAudioElement.addEventListener('ended', () => {
+        const loopHandler = () => {
           // This will trigger when audio ends
           // With loop=true, this shouldn't happen, but ensures it loops
           this.bgAudioElement.currentTime = 0;
           this.bgAudioElement.play();
-        });
+        };
+        this.bgAudioElement.addEventListener('ended', loopHandler);
+        // Store reference for cleanup
+        this.loopHandler = loopHandler;
+      }
+    }
+
+    // Cleanup audio system
+    cleanup() {
+      if (this.bgAudioElement && this.loopHandler) {
+        this.bgAudioElement.removeEventListener('ended', this.loopHandler);
+      }
+      if (this.bgAudioElement) {
+        this.bgAudioElement.pause();
+        this.bgAudioElement.currentTime = 0;
       }
     }
     
@@ -238,188 +306,17 @@ const Game = (() => {
     return settings[state.difficulty] || settings.medium;
   }
   
-  // Helper to reset mascot and enable buttons after delay
+  // Helper to reset emoji and enable buttons after delay
   function resetToNeutralState(delay = 600){
-    setTimeout(() => {
-      setMascotMood('neutral');
+    addTrackedTimeout(() => {
       setButtonsEnabled(true);
     }, delay);
   }
-  
+
   // Helper to set active option in a group
   function setActiveOption(selector, clickedElement){
     document.querySelectorAll(selector).forEach(x => x.classList.remove('active'));
     clickedElement.classList.add('active');
-  }
-
-  // Create mascot based on theme
-  function createMascotForTheme(theme){
-    const face = document.querySelector('#face');
-    if(!face) return;
-    
-    // Clear existing content
-    face.innerHTML = '';
-    
-    // Get current theme if not provided
-    if(!theme) theme = document.body.getAttribute('data-theme') || 'space';
-    
-    // Update mascot description (same length for consistency)
-    const descriptions = {
-      'lavender-fields': 'Mascot reacts to answers!',
-      'hydrangea': 'Mascot reacts to answers!',
-      'lush-forest': 'Mascot reacts to answers!',
-      'stormy-morning': 'Mascot reacts to answers!'
-    };
-    const descEl = document.querySelector('.mascot-description');
-    if(descEl) descEl.textContent = descriptions[theme] || 'Mascot reacts to your answers!';
-    
-    let mascotHTML = '';
-    
-    if(theme === 'lavender-fields'){
-      // Butterfly
-      mascotHTML = `
-        <!-- Left wing -->
-        <ellipse cx="30" cy="35" rx="18" ry="24" fill="#c39bd3" stroke="#8e44ad" stroke-width="2" />
-        <ellipse cx="28" cy="32" rx="10" ry="14" fill="#e8daef" opacity="0.8" />
-        <circle cx="26" cy="28" r="3" fill="#9b59b6" />
-        <!-- Right wing -->
-        <ellipse cx="70" cy="35" rx="18" ry="24" fill="#c39bd3" stroke="#8e44ad" stroke-width="2" />
-        <ellipse cx="72" cy="32" rx="10" ry="14" fill="#e8daef" opacity="0.8" />
-        <circle cx="74" cy="28" r="3" fill="#9b59b6" />
-        <!-- Body -->
-        <ellipse cx="50" cy="40" rx="8" ry="28" fill="#7d3c98" />
-        <!-- Head -->
-        <circle cx="50" cy="20" r="10" fill="#8e44ad" />
-        <!-- Antennae -->
-        <path d="M 46,12 Q 42,8 40,6" stroke="#8e44ad" stroke-width="2" fill="none" stroke-linecap="round" />
-        <path d="M 54,12 Q 58,8 60,6" stroke="#8e44ad" stroke-width="2" fill="none" stroke-linecap="round" />
-        <circle cx="40" cy="6" r="3" fill="#c39bd3" />
-        <circle cx="60" cy="6" r="3" fill="#c39bd3" />
-        <g id="eyes"></g>
-        <g id="mouth"></g>
-      `;
-    } else if(theme === 'hydrangea'){
-      // Flower
-      mascotHTML = `
-        <!-- Stem (shortened) -->
-        <rect x="47" y="48" width="6" height="18" fill="#27ae60" rx="3" />
-        <!-- Leaves (adjusted) -->
-        <ellipse cx="38" cy="56" rx="8" ry="5" fill="#2ecc71" transform="rotate(-30 38 56)" />
-        <ellipse cx="62" cy="56" rx="8" ry="5" fill="#2ecc71" transform="rotate(30 62 56)" />
-        <!-- Petals (5 petals in circle) -->
-        <ellipse cx="50" cy="22" rx="11" ry="14" fill="#f0b4e4" stroke="#b565d8" stroke-width="2" />
-        <ellipse cx="64" cy="31" rx="11" ry="14" fill="#e89dd8" stroke="#b565d8" stroke-width="2" transform="rotate(72 64 31)" />
-        <ellipse cx="59" cy="48" rx="11" ry="14" fill="#d885c8" stroke="#b565d8" stroke-width="2" transform="rotate(144 59 48)" />
-        <ellipse cx="41" cy="48" rx="11" ry="14" fill="#d885c8" stroke="#b565d8" stroke-width="2" transform="rotate(216 41 48)" />
-        <ellipse cx="36" cy="31" rx="11" ry="14" fill="#e89dd8" stroke="#b565d8" stroke-width="2" transform="rotate(288 36 31)" />
-        <!-- Center circle (face) -->
-        <circle cx="50" cy="36" r="13" fill="#7e5bb5" stroke="#5e3b8f" stroke-width="2" />
-        <g id="eyes"></g>
-        <g id="mouth"></g>
-      `;
-    } else if(theme === 'lush-forest'){
-      // Deer
-      mascotHTML = `
-        <!-- Antlers (adjusted) -->
-        <path d="M 36,20 L 32,14 L 30,18 M 32,14 L 29,11" stroke="#78350f" stroke-width="3" fill="none" stroke-linecap="round" />
-        <path d="M 64,20 L 68,14 L 70,18 M 68,14 L 71,11" stroke="#78350f" stroke-width="3" fill="none" stroke-linecap="round" />
-        <!-- Head -->
-        <ellipse cx="50" cy="40" rx="26" ry="28" fill="#a16207" stroke="#78350f" stroke-width="3" />
-        <!-- Snout -->
-        <ellipse cx="50" cy="52" rx="15" ry="12" fill="#d4a574" />
-        <!-- Nose -->
-        <ellipse cx="50" cy="58" rx="5" ry="4" fill="#4a3020" />
-        <!-- Ears -->
-        <ellipse cx="32" cy="28" rx="7" ry="12" fill="#a16207" stroke="#78350f" stroke-width="2" transform="rotate(-20 32 28)" />
-        <ellipse cx="68" cy="28" rx="7" ry="12" fill="#a16207" stroke="#78350f" stroke-width="2" transform="rotate(20 68 28)" />
-        <ellipse cx="32" cy="29" rx="3.5" ry="7" fill="#d4a574" transform="rotate(-20 32 29)" />
-        <ellipse cx="68" cy="29" rx="3.5" ry="7" fill="#d4a574" transform="rotate(20 68 29)" />
-        <!-- Spots -->
-        <circle cx="40" cy="34" r="2.5" fill="#f0f0f0" opacity="0.8" />
-        <circle cx="60" cy="34" r="2.5" fill="#f0f0f0" opacity="0.8" />
-        <circle cx="50" cy="38" r="2" fill="#f0f0f0" opacity="0.8" />
-        <g id="eyes"></g>
-        <g id="mouth"></g>
-      `;
-    } else if(theme === 'stormy-morning'){
-      // Cloud
-      mascotHTML = `
-        <!-- Cloud body (multiple circles) -->
-        <circle cx="35" cy="38" r="15" fill="#aeb6bf" stroke="#5d6d7e" stroke-width="2" />
-        <circle cx="50" cy="33" r="17" fill="#d5dbdb" stroke="#5d6d7e" stroke-width="2" />
-        <circle cx="65" cy="38" r="15" fill="#aeb6bf" stroke="#5d6d7e" stroke-width="2" />
-        <circle cx="50" cy="45" r="13" fill="#85929e" stroke="#5d6d7e" stroke-width="2" />
-        <!-- Rain drops (shortened) -->
-        <ellipse cx="38" cy="58" rx="2.5" ry="5" fill="#5d6d7e" opacity="0.6" />
-        <ellipse cx="50" cy="62" rx="2.5" ry="5" fill="#5d6d7e" opacity="0.6" />
-        <ellipse cx="62" cy="58" rx="2.5" ry="5" fill="#5d6d7e" opacity="0.6" />
-        <!-- Lightning (optional accent) -->
-        <path d="M 54,50 L 52,54 L 53,54 L 51,58" stroke="#f39c12" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.8" />
-        <g id="eyes"></g>
-        <g id="mouth"></g>
-      `;
-    } else {
-      // Default (current smiley)
-      mascotHTML = `
-        <circle cx="50" cy="34" r="30" fill="#ffd166" stroke="#f59e0b" stroke-width="2" />
-        <g id="eyes"></g>
-        <g id="mouth"></g>
-      `;
-    }
-    
-    face.innerHTML = mascotHTML;
-  }
-  
-  // Mascot reactions (change SVG mouth/eyes)
-  function setMascotMood(mood='neutral'){
-    try{
-      const mascot = document.querySelector('.mascot');
-      const face = document.querySelector('#face');
-      const eyes = document.querySelector('#eyes');
-      const mouth = document.querySelector('#mouth');
-      if(!face || !eyes || !mouth) return;
-      
-      // Get current theme for position adjustments
-      const theme = document.body.getAttribute('data-theme') || 'space';
-      
-      // Position adjustments per theme
-      let eyeY = 32, mouthY = 44, mouthYSad = 52;
-      if(theme === 'lavender-fields') { eyeY = 18; mouthY = 24; mouthYSad = 28; } // Butterfly (head)
-      else if(theme === 'hydrangea') { eyeY = 34; mouthY = 40; mouthYSad = 44; } // Flower (center)
-      else if(theme === 'lush-forest') { eyeY = 36; mouthY = 48; mouthYSad = 52; } // Deer (snout area)
-      else if(theme === 'stormy-morning') { eyeY = 34; mouthY = 42; mouthYSad = 46; } // Cloud
-      else { eyeY = 32; mouthY = 44; mouthYSad = 52; } // default
-      
-      // Remove all mood classes
-      mascot.classList.remove('mood-happy', 'mood-sad', 'mood-excited');
-      
-      // clear
-      eyes.innerHTML=''; mouth.innerHTML='';
-      
-      if(mood==='happy'){
-        mascot.classList.add('mood-happy');
-        eyes.innerHTML = `<circle cx="36" cy="${eyeY}" r="5" fill="#111" /><circle cx="64" cy="${eyeY}" r="5" fill="#111" />`;
-        mouth.innerHTML = `<path d="M36,${mouthY} Q50,${mouthY+16} 64,${mouthY}" stroke="#111" stroke-width="3" fill="none" stroke-linecap="round" />`;
-      }else if(mood==='sad'){
-        mascot.classList.add('mood-sad');
-        eyes.innerHTML = `<path d="M33,${eyeY-3} q6,8 12,0" fill="none" stroke="#111" stroke-width="3" stroke-linecap="round" /> <path d="M61,${eyeY-3} q6,8 12,0" fill="none" stroke="#111" stroke-width="3" stroke-linecap="round" />`;
-        mouth.innerHTML = `<path d="M36,${mouthYSad} Q50,${mouthYSad-10} 64,${mouthYSad}" stroke="#111" stroke-width="3" fill="none" stroke-linecap="round" />`;
-      }else if(mood==='surprised'){
-        eyes.innerHTML = `<circle cx="36" cy="${eyeY}" r="6" fill="#111" /><circle cx="64" cy="${eyeY}" r="6" fill="#111" />`;
-        mouth.innerHTML = `<circle cx="50" cy="${mouthY+2}" r="8" fill="#111" />`;
-      }else if(mood==='excited'){
-        mascot.classList.add('mood-excited');
-        eyes.innerHTML = `<circle cx="36" cy="${eyeY}" r="5" fill="#111" /><circle cx="64" cy="${eyeY}" r="5" fill="#111" /><circle cx="33" cy="${eyeY-2}" r="2" fill="#fff" /><circle cx="61" cy="${eyeY-2}" r="2" fill="#fff" />`;
-        mouth.innerHTML = `<path d="M36,${mouthY-2} Q50,${mouthY+18} 64,${mouthY-2}" stroke="#111" stroke-width="4" fill="none" stroke-linecap="round" />`;
-      }else if(mood==='thinking'){
-        eyes.innerHTML = `<circle cx="36" cy="${eyeY}" r="4" fill="#111" /><circle cx="64" cy="${eyeY}" r="4" fill="#111" />`;
-        mouth.innerHTML = `<path d="M36,${mouthY+4} Q44,${mouthY+8} 52,${mouthY+4}" stroke="#222" stroke-width="3" fill="none" stroke-linecap="round" />`;
-      }else{
-        // neutral
-        eyes.innerHTML = `<circle cx="36" cy="${eyeY}" r="4" fill="#111" /><circle cx="64" cy="${eyeY}" r="4" fill="#111" />`;
-        mouth.innerHTML = `<path d="M36,${mouthY+2} Q50,${mouthY+8} 64,${mouthY+2}" stroke="#222" stroke-width="3" fill="none" stroke-linecap="round" />`;
-      }
-    }catch(e){}
   }
 
   // Question generation
@@ -462,18 +359,12 @@ const Game = (() => {
 
   function shuffle(arr){return arr.sort(()=>Math.random()-0.5)}
 
-  // Store button handlers
-  const buttonHandlers = new Map();
-
   // Generate answer options (4 options now)
   function generateQuestion(){
     const q = genNumbers(); state.currentAnswer = q.ans; state.qnum++;
     document.getElementById('q-top').textContent = q.num1;
     document.getElementById('q-bottom-number').textContent = q.num2;
     document.getElementById('q-op').textContent = q.op;
-    
-    // Show thinking mood when new question appears
-    if(state.qnum > 1) setMascotMood('thinking');
 
     // create options
     const answers = new Set([q.ans]);
@@ -575,26 +466,24 @@ const Game = (() => {
       // Multiple choice mode: show buttons, hide input
       refs.answers.style.display = 'grid';
       refs.answerInputContainer.style.display = 'none';
-      
+
       // Reuse existing buttons - just update text and handler
       const buttons = $$('.answer');
       buttons.forEach((btn, index) => {
         const value = arr[index];
-        
-        // Remove old listener if exists
-        if(buttonHandlers.has(btn)) {
-          btn.removeEventListener('click', buttonHandlers.get(btn));
-        }
-        
+
+        // Remove old listener by cloning and replacing
+        const newBtn = btn.cloneNode(true);
+        btn.parentNode.replaceChild(newBtn, btn);
+
         // Update button
-        btn.textContent = value;
-        btn.className = 'answer';
-        btn.disabled = false;
-        
-        // Add new listener
-        const handler = ()=> handleAnswer(value, btn);
-        buttonHandlers.set(btn, handler);
-        btn.addEventListener('click', handler);
+        newBtn.textContent = value;
+        newBtn.className = 'answer';
+        newBtn.disabled = false;
+
+        // Add new listener using tracked system
+        const handler = ()=> handleAnswer(value, newBtn);
+        addTrackedListener(newBtn, 'click', handler);
       });
     }
 
@@ -627,7 +516,7 @@ const Game = (() => {
     // Validate input before processing
     if (!validateManualInput(inputValue)) {
       refs.answerInput.classList.add('error');
-      setTimeout(() => refs.answerInput.classList.remove('error'), 500);
+      addTrackedTimeout(() => refs.answerInput.classList.remove('error'), 500);
       return;
     }
     
@@ -666,13 +555,10 @@ const Game = (() => {
     audio.playSfx('correct');
     // Play streak sound on milestones (every 5 correct)
     if(state.streak > 0 && (state.streak + 1) % 5 === 0){
-      setTimeout(() => audio.playSfx('streak'), 200);
+      addTrackedTimeout(() => audio.playSfx('streak'), 200);
     }
     
-    // Show excited mood on streak milestones
-    const mood = (state.streak > 0 && state.streak % 3 === 2) ? 'excited' : 'happy';
-    setMascotMood(mood);
-    
+    // Show excited emoji on streak milestones
     state.score += 1 * state.combo;
     state.streak++; 
     if(state.streak % 3 === 0) state.combo = Math.min(5, state.combo + 1);
@@ -701,9 +587,8 @@ const Game = (() => {
       const inputRect = refs.answerInput.getBoundingClientRect();
       spawnParticles(inputRect.left + inputRect.width / 2, inputRect.top + inputRect.height / 2);
     }
-    
-    setTimeout(() => {
-      setMascotMood('neutral');
+
+    addTrackedTimeout(() => {
       generateQuestion();
       setButtonsEnabled(true);
       // Re-enable input for manual mode
@@ -713,11 +598,10 @@ const Game = (() => {
       }
     }, 600);
   }
-  
+
   // Handle wrong answer logic
   function handleWrongAnswer(btn, isManualInput = false){
     if(btn) btn.classList.add('wrong');
-    setMascotMood('sad');
     audio.playSfx('wrong');
     state.wrong++; 
     state.streak = 0; 
@@ -728,11 +612,10 @@ const Game = (() => {
     state.totalQuestions++;
     
     showFeedback(false);
-    
+
     if(state.learningMode){
-      setTimeout(() => {
+      addTrackedTimeout(() => {
         if(btn) btn.classList.remove('wrong');
-        setMascotMood('neutral');
         setButtonsEnabled(true);
         // Re-enable input for manual mode
         if(isManualInput){
@@ -742,12 +625,11 @@ const Game = (() => {
         refs.feedback.textContent = 'Try again — you got this!';
       }, 700);
     } else {
-      setTimeout(() => {
+      addTrackedTimeout(() => {
         if(state.wrong >= 5){
           endGame('wrong');
         } else {
           if(btn) btn.classList.remove('wrong');
-          setMascotMood('neutral');
           setButtonsEnabled(true);
           // Re-enable input for manual mode
           if(isManualInput){
@@ -791,12 +673,11 @@ const Game = (() => {
     
     save();
     updateUI();
-    
+
     // Show score screen with statistics (unless user quit from pause)
     if(reason === 'paused'){
       // User quit from pause - just reset without showing score
       resetGame();
-      setMascotMood('neutral');
     } else {
       showScoreScreen(reason, isNewHighScore);
     }
@@ -848,17 +729,8 @@ const Game = (() => {
     
     // Show score screen
     refs.scoreScreen.classList.add('show');
-    
-    // Mascot mood based on performance
-    if(accuracy >= 80){
-      setMascotMood('excited');
-    } else if(accuracy >= 50){
-      setMascotMood('happy');
-    } else {
-      setMascotMood('thinking');
-    }
   }
-  
+
   // Hide score screen
   function hideScoreScreen(){
     refs.scoreScreen.classList.remove('show');
@@ -868,8 +740,6 @@ const Game = (() => {
     }
     // Reset game state completely
     resetGame();
-    // Reset mascot to neutral
-    setMascotMood('neutral');
   }
 
   function startGame(){
@@ -934,6 +804,7 @@ const Game = (() => {
         state.timeLeft--;
         if(state.timeLeft <= 0){
           clearInterval(state._timer);
+          state._timer = null;
           endGame('time');
         }
       }
@@ -1026,7 +897,7 @@ const Game = (() => {
     refs.rewardPopup.style.display = 'block';
     refs.rewardPopup.textContent = text;
     refs.rewardPopup.classList.add('pop');
-    setTimeout(() => {
+    addTrackedTimeout(() => {
       refs.rewardPopup.style.display = 'none';
       refs.rewardPopup.classList.remove('pop');
     }, 1500);
@@ -1056,7 +927,7 @@ const Game = (() => {
       document.body.appendChild(el);
       const fall = rand(1800,3200);
       el.animate([{transform:'translateY(0)'},{transform:`translateY(${window.innerHeight + 50}px)`}],{duration:fall, easing:'cubic-bezier(.2,.8,.2,1)'});
-      setTimeout(()=>el.remove(),fall+50);
+      addTrackedTimeout(()=>el.remove(),fall+50);
     }
   }
 
@@ -1079,9 +950,9 @@ const Game = (() => {
         {transform: 'translate(0, 0) scale(0.5) rotate(0deg)', opacity: 1},
         {transform: `translate(${endX - x}px, ${endY - y}px) scale(1.2) rotate(${rand(-180, 180)}deg)`, opacity: 0}
       ], {duration: rand(800, 1200), easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'});
-      setTimeout(() => particle.remove(), 1200);
+      addTrackedTimeout(() => particle.remove(), 1200);
     }
-    
+
     // Spawn sparkles
     for(let i=0;i<12;i++){
       const sparkle = document.createElement('div');
@@ -1089,7 +960,7 @@ const Game = (() => {
       sparkle.style.left = (x + rand(-40, 40)) + 'px';
       sparkle.style.top = (y + rand(-40, 40)) + 'px';
       document.body.appendChild(sparkle);
-      setTimeout(() => sparkle.remove(), 1000);
+      addTrackedTimeout(() => sparkle.remove(), 1000);
     }
   }
 
@@ -1097,41 +968,38 @@ const Game = (() => {
   function setupUI(){
     // Difficulty options
     document.querySelectorAll('.option[data-difficulty]').forEach(o => {
-      o.addEventListener('click', () => setActiveOption('.option[data-difficulty]', o));
+      addTrackedListener(o, 'click', () => setActiveOption('.option[data-difficulty]', o));
     });
-    
+
     // Mode options
     document.querySelectorAll('.option[data-mode]').forEach(o => {
-      o.addEventListener('click', () => setActiveOption('.option[data-mode]', o));
+      addTrackedListener(o, 'click', () => setActiveOption('.option[data-mode]', o));
     });
 
     // Answer mode options
     document.querySelectorAll('.option[data-answer-mode]').forEach(o => {
-      o.addEventListener('click', () => setActiveOption('.option[data-answer-mode]', o));
+      addTrackedListener(o, 'click', () => setActiveOption('.option[data-answer-mode]', o));
     });
 
     // Theme picker
     document.querySelectorAll('.theme').forEach(t => {
-      t.addEventListener('click', () => {
+      addTrackedListener(t, 'click', () => {
         const themeName = t.dataset.theme;
         document.body.setAttribute('data-theme', themeName);
         setActiveOption('.theme', t);
-        // Change mascot based on theme
-        createMascotForTheme(themeName);
-        setMascotMood('neutral');
       });
     });
 
     // Start button
-    refs.startBtn.addEventListener('click', startGame);
+    addTrackedListener(refs.startBtn, 'click', startGame);
 
     // Back to menu button
-    refs.backToMenuBtn.addEventListener('click', () => {
+    addTrackedListener(refs.backToMenuBtn, 'click', () => {
       window.location.href = '../index.html';
     });
 
     // Pause/Resume button
-    refs.pauseBtn.addEventListener('click', () => {
+    addTrackedListener(refs.pauseBtn, 'click', () => {
       if(state.paused){
         resumeGame();
       } else {
@@ -1140,30 +1008,30 @@ const Game = (() => {
     });
 
     // Resume button in pause overlay
-    refs.resumeBtn.addEventListener('click', resumeGame);
+    addTrackedListener(refs.resumeBtn, 'click', resumeGame);
 
     // Change Settings button in pause overlay
-    refs.pauseChangeSettingsBtn.addEventListener('click', () => {
+    addTrackedListener(refs.pauseChangeSettingsBtn, 'click', () => {
       // End the current game and return to settings
       endGame('paused');
     });
 
     // Sound toggle
-    refs.soundToggle.addEventListener('click', () => {
+    addTrackedListener(refs.soundToggle, 'click', () => {
       audio.soundEnabled = !audio.soundEnabled;
       refs.soundToggle.setAttribute('aria-pressed', audio.soundEnabled);
       refs.soundToggle.textContent = audio.soundEnabled ? '🔊 Sound' : '🔇 Sound';
     });
 
     // Music toggle
-    refs.musicToggle.addEventListener('click', () => {
+    addTrackedListener(refs.musicToggle, 'click', () => {
       const isEnabled = audio.toggleMusic();
       refs.musicToggle.setAttribute('aria-pressed', isEnabled);
       refs.musicToggle.textContent = isEnabled ? '🎵 Music: On' : '🎵 Music';
     });
-    
+
     // Learning mode toggle
-    refs.learningToggle.addEventListener('click', () => {
+    addTrackedListener(refs.learningToggle, 'click', () => {
       state.learningMode = !state.learningMode;
       refs.learningToggle.setAttribute('aria-pressed', state.learningMode);
       refs.learningToggle.textContent = state.learningMode ? '📖 Learning: On' : '📖 Learning Mode';
@@ -1171,12 +1039,12 @@ const Game = (() => {
 
     // Manual input submit button
     if(refs.submitBtn){
-      refs.submitBtn.addEventListener('click', handleManualInputSubmit);
+      addTrackedListener(refs.submitBtn, 'click', handleManualInputSubmit);
     }
-    
+
     // Manual input Enter key support
     if(refs.answerInput){
-      refs.answerInput.addEventListener('keydown', (e) => {
+      addTrackedListener(refs.answerInput, 'keydown', (e) => {
         if(e.key === 'Enter' && state.running){
           handleManualInputSubmit();
         }
@@ -1184,7 +1052,7 @@ const Game = (() => {
     }
 
     // Keyboard support
-    document.addEventListener('keydown', (e) => {
+    addTrackedListener(document, 'keydown', (e) => {
       // Pause with P key
       if(e.key.toLowerCase() === 'p' && state.running){
         if(state.paused){
@@ -1223,10 +1091,10 @@ const Game = (() => {
         if(btn) btn.click();
       }
     });
-    
+
     // Score screen buttons
-    refs.playAgainBtn.addEventListener('click', startGame);
-    refs.changeSettingsBtn.addEventListener('click', hideScoreScreen);
+    addTrackedListener(refs.playAgainBtn, 'click', startGame);
+    addTrackedListener(refs.changeSettingsBtn, 'click', hideScoreScreen);
   }
 
   // Initialize game
@@ -1239,28 +1107,42 @@ const Game = (() => {
     const currentTheme = document.body.getAttribute('data-theme') || 'lavender-fields';
     const activeThemeBtn = document.querySelector(`.theme[data-theme="${currentTheme}"]`);
     if(activeThemeBtn) activeThemeBtn.classList.add('active');
-    
-    // Create mascot for current theme and set mood
-    createMascotForTheme(currentTheme);
-    setMascotMood('neutral');
   }
 
-  return { init, startGame, resetGame, state };
+  return { init, startGame, resetGame, cleanup, state };
 })();
 
 // Start
-document.addEventListener('DOMContentLoaded', ()=>{ 
-  Game.init(); 
-  
+document.addEventListener('DOMContentLoaded', () => {
+  Game.init();
+
   // Load background music settings
   if(Game.state && Game.state.audio){
     Game.state.audio.loadSettings();
   }
-  
+
   // Make changeBackgroundMusic globally accessible
   window.changeBackgroundMusic = (musicName) => {
     if(Game.state && Game.state.audio){
       Game.state.audio.changeBackgroundMusic(musicName);
     }
   };
+
+  // Cleanup on page unload
+  window.addEventListener('beforeunload', () => {
+    Game.cleanup();
+  });
+
+  // Cleanup on page hide (for mobile browsers)
+  window.addEventListener('pagehide', () => {
+    Game.cleanup();
+  });
+
+  // Cleanup on visibility change (for better performance)
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && Game.state.running) {
+      // Optionally pause game when tab is hidden
+      // pauseGame();
+    }
+  });
 });

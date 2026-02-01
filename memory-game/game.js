@@ -21,6 +21,59 @@ const PARTICLE_CONFIG = {
 };
 
 // ========================================
+// CLEANUP SYSTEM
+// ========================================
+const eventListeners = [];
+const timers = [];
+const timeouts = [];
+
+// Helper to add tracked event listeners
+function addTrackedListener(element, event, handler, options = {}) {
+    element.addEventListener(event, handler, options);
+    eventListeners.push({ element, event, handler, options });
+}
+
+// Helper to add tracked timers
+function addTrackedTimer(id) {
+    timers.push(id);
+}
+
+// Helper to add tracked timeouts
+function addTrackedTimeout(callback, delay) {
+    const id = setTimeout(() => {
+        callback();
+        // Remove from timeouts array after executing
+        const index = timeouts.indexOf(id);
+        if (index > -1) timeouts.splice(index, 1);
+    }, delay);
+    timeouts.push(id);
+    return id;
+}
+
+// Cleanup function
+function cleanup() {
+    // Remove all event listeners
+    eventListeners.forEach(({ element, event, handler, options }) => {
+        element.removeEventListener(event, handler, options);
+    });
+    eventListeners.length = 0;
+
+    // Clear all timers
+    timers.forEach(id => clearInterval(id));
+    timers.length = 0;
+
+    // Clear all timeouts
+    timeouts.forEach(id => clearTimeout(id));
+    timeouts.length = 0;
+
+    // Clear main timer
+    stopTimer();
+
+    // Stop background music
+    audioSystem.stopMusic();
+}
+
+// ========================================
 // SECURITY UTILITIES
 // ========================================
 function escapeHtml(unsafe) {
@@ -321,7 +374,7 @@ function createConfetti() {
         confetti.style.animationDuration = (2 + Math.random()) + 's';
         document.body.appendChild(confetti);
 
-        setTimeout(() => confetti.remove(), 3000);
+        addTrackedTimeout(() => confetti.remove(), 3000);
     }
 }
 
@@ -578,7 +631,7 @@ function checkForMatch() {
         }
 
         // Mark cards as matched
-        setTimeout(() => {
+        addTrackedTimeout(() => {
             document.querySelector(`[data-id="${card1.id}"]`).classList.add('matched');
             document.querySelector(`[data-id="${card2.id}"]`).classList.add('matched');
             gameState.flippedCards = [];
@@ -594,7 +647,7 @@ function checkForMatch() {
             audioSystem.playNotes([392, 330], gameState.soundTheme, gameState.visualTheme);
         }
 
-        setTimeout(() => {
+        addTrackedTimeout(() => {
             card1.isFlipped = false;
             card2.isFlipped = false;
 
@@ -629,7 +682,7 @@ function gameWon() {
 
     createConfetti();
 
-    setTimeout(() => {
+    addTrackedTimeout(() => {
         const content = document.getElementById('game-content');
         // Star rating based on difficulty and moves
         const perfectMoves = gameState.cards.length / 2; // Minimum possible moves
@@ -821,6 +874,7 @@ function startTimer() {
     gameState.timerInterval = setInterval(() => {
         updateStats();
     }, 1000);
+    addTrackedTimer(gameState.timerInterval);
 }
 
 function stopTimer() {
@@ -859,4 +913,18 @@ document.addEventListener('DOMContentLoaded', () => {
     loadStats();
     createBackgroundParticles();
     updateStats();
+
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', cleanup);
+
+    // Cleanup on page hide (for mobile browsers)
+    window.addEventListener('pagehide', cleanup);
+
+    // Cleanup on visibility change (for better performance)
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden && gameState.isPlaying) {
+            // Optionally pause timer when tab is hidden
+            // stopTimer();
+        }
+    });
 });

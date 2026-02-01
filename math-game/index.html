@@ -38,36 +38,10 @@
         </div>
       </header>
 
-      <div class="top-row">
-        <!-- Mascot Panel -->
-        <div class="panel mascot-panel">
-          <div class="mascot" id="mascot" aria-hidden="true">
-            <!-- inline svg mascot, faces will be toggled via JS -->
-            <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" id="mascotSvg">
-              <defs>
-                <linearGradient id="g1" x1="0" x2="1">
-                  <stop offset="0" stop-color="#fff" stop-opacity="0.9"/>
-                  <stop offset="1" stop-color="#fff" stop-opacity="0.6"/>
-                </linearGradient>
-              </defs>
-              <rect width="120" height="120" rx="14" fill="url(#g1)" />
-              <g id="face" transform="translate(10,16)">
-                <circle cx="50" cy="34" r="30" fill="#ffd166" stroke="#f59e0b" stroke-width="2" />
-                <g id="eyes">
-                  <circle cx="36" cy="28" r="4" fill="#222" />
-                  <circle cx="64" cy="28" r="4" fill="#222" />
-                </g>
-                <g id="mouth">
-                  <path d="M36,46 Q50,60 64,46" stroke="#222" stroke-width="3" fill="none" stroke-linecap="round" />
-                </g>
-              </g>
-            </svg>
-          </div>
-          <div class="mini mascot-description">Mascot reacts to your answers!</div>
-        </div>
 
-        <!-- Game Settings Panel -->
-        <div class="panel settings-panel">
+      <!-- Game Settings Panel -->
+      <div class="panel settings-panel">
+        <div class="settings-section-grid">
           <div class="settings-section">
             <div class="section-label">Difficulty Level</div>
             <div class="settings-group">
@@ -85,7 +59,9 @@
               <div class="option" data-mode="subtraction">➖ Sub</div>
             </div>
           </div>
+        </div>
 
+        <div class="settings-section-grid" style="margin-top: 14px;">
           <div class="settings-section">
             <div class="section-label">Answer Mode</div>
             <div class="settings-group">
@@ -142,7 +118,6 @@
             </div>
           </div>
         </div>
-      </div>
 
       <div class="game-area">
         <div class="left">
@@ -280,11 +255,12 @@
       };
       window.addEventListener('resize', resetViewport);
       window.addEventListener('orientationchange', resetViewport);
+      // Use passive: true for better scroll performance on mobile
       document.addEventListener('touchstart', function(e) {
         if (e.touches.length > 1) {
           e.preventDefault();
         }
-      }, { passive: false });
+      }, { passive: true });
     })();
   </script>
   <script src="game.js"></script>

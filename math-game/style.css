@@ -44,22 +44,12 @@ h1{margin:0;font-size:1.8rem;color:var(--accent);font-weight:700;text-shadow:2px
 .ghost[aria-pressed="true"]{background:var(--accent);color:white;border-color:var(--accent)}
 
 .top-row{display:grid;grid-template-columns:240px 1fr 240px;gap:18px;margin-top:14px;align-items:stretch}
-.panel{background:linear-gradient(180deg,rgba(255,255,255,0.95),rgba(255,255,255,1));padding:18px;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,0.1);border:3px solid rgba(255,255,255,0.8)}
-
-/* Mascot Panel */
-.mascot-panel{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;width:100%;height:100%}
-.mascot{width:110px;height:110px;border-radius:20px;background:linear-gradient(135deg,#fef08a 0%,#fde047 100%);display:grid;place-items:center;box-shadow:0 8px 20px rgba(0,0,0,0.15), 0 0 0 4px rgba(255,255,255,0.5);border:3px solid #facc15;transition:all 0.4s cubic-bezier(0.4, 0, 0.2, 1);overflow:hidden}
-.mascot svg{width:80%;height:80%}
-.mascot svg #eyes, .mascot svg #mouth{transition:all 0.3s ease}
-.mascot.mood-happy{animation:mascot-bounce 0.6s ease}
-.mascot.mood-sad{animation:mascot-shake 0.5s ease}
-.mascot.mood-excited{animation:mascot-spin 0.8s ease}
-.mascot-description{margin-top:4px;text-align:center;font-size:0.8rem;line-height:1.3;min-height:2.6rem;display:flex;align-items:center;justify-content:center}
+.panel{background:linear-gradient(180deg,rgba(255,255,255,0.95),rgba(255,255,255,1));padding:18px;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,0.1);border:3px solid rgba(255,255,255,0.8);margin-bottom:18px}
 
 /* Settings Panel */
-.settings-panel{width:100%;height:100%;min-width:280px}
-.settings-section{margin-bottom:14px}
-.settings-section:last-child{margin-bottom:0}
+.settings-panel{width:100%;height:auto}
+.settings-panel .settings-section-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+.settings-section{margin-bottom:0}
 .section-label{font-weight:700;font-size:0.85rem;color:var(--accent);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px}
 .settings-group{display:flex;gap:8px;flex-wrap:wrap}
 .option{padding:10px 14px;border-radius:12px;border:3px solid var(--accent);cursor:pointer;background:white;transition:all 0.25s cubic-bezier(0.4, 0, 0.2, 1);z-index:1;position:relative;min-height:44px;display:inline-flex;align-items:center;justify-content:center;font-weight:700;box-shadow:0 3px 10px rgba(0,0,0,0.1);font-size:0.9rem}
@@ -475,6 +465,10 @@ button:focus{outline:3px solid rgba(0,0,0,0.08)}
 /* Prevent zoom on input focus and buttons */
 input, select, textarea, button {
   font-size: 16px !important;
+}
+
+@media (max-width:600px){
+  .settings-panel .settings-section-grid{grid-template-columns:1fr}
 }
 
 @media screen and (-webkit-min-device-pixel-ratio:0) {

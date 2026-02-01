@@ -31,6 +31,63 @@ const DOM = {
 };
 
 // ========================================
+// CLEANUP SYSTEM
+// ========================================
+const eventListeners = [];
+const timers = [];
+const timeouts = [];
+
+// Helper to add tracked event listeners
+function addTrackedListener(element, event, handler, options = {}) {
+    element.addEventListener(event, handler, options);
+    eventListeners.push({ element, event, handler, options });
+}
+
+// Helper to add tracked timers
+function addTrackedTimer(id) {
+    timers.push(id);
+}
+
+// Helper to add tracked timeouts
+function addTrackedTimeout(callback, delay) {
+    const id = setTimeout(() => {
+        callback();
+        // Remove from timeouts array after executing
+        const index = timeouts.indexOf(id);
+        if (index > -1) timeouts.splice(index, 1);
+    }, delay);
+    timeouts.push(id);
+    return id;
+}
+
+// Cleanup function
+function cleanup() {
+    // Remove all event listeners
+    eventListeners.forEach(({ element, event, handler, options }) => {
+        element.removeEventListener(event, handler, options);
+    });
+    eventListeners.length = 0;
+
+    // Clear all timers
+    timers.forEach(id => clearTimeout(id));
+    timers.length = 0;
+
+    // Clear all timeouts
+    timeouts.forEach(id => clearTimeout(id));
+    timeouts.length = 0;
+
+    // Stop background music
+    if (backgroundMusic) {
+        // Remove loop event listener
+        if (backgroundMusic._loopHandler) {
+            backgroundMusic.removeEventListener('ended', backgroundMusic._loopHandler);
+        }
+        backgroundMusic.pause();
+        backgroundMusic.currentTime = 0;
+    }
+}
+
+// ========================================
 // SECURITY UTILITIES
 // ========================================
 
@@ -204,6 +261,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     initBackgroundMusic();
     createBackgroundParticles();
     setupKeyboardSupport();
+
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', cleanup);
+
+    // Cleanup on page hide (for mobile browsers)
+    window.addEventListener('pagehide', cleanup);
+
+    // Cleanup on visibility change (for better performance)
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            // Optionally pause background music when tab is hidden
+            if (backgroundMusic && !backgroundMusic.paused) {
+                backgroundMusic.pause();
+            }
+        } else {
+            // Resume when tab becomes visible
+            if (backgroundMusic && musicEnabled) {
+                backgroundMusic.play().catch(e => {
+                    // Could not resume - silent fail
+                });
+            }
+        }
+    });
 });
 
 // Cache DOM elements for better performance
@@ -308,7 +388,7 @@ function debounce(func, wait) {
 }
 
 // Handle window resize - recreate particles on orientation change
-window.addEventListener('resize', debounce(() => {
+addTrackedListener(window, 'resize', debounce(() => {
     createBackgroundParticles();
 }, 500));
 
@@ -455,14 +535,17 @@ function initBackgroundMusic() {
         backgroundMusic = new Audio();
         backgroundMusic.loop = true;
         backgroundMusic.volume = 0.3;
-        
+
         // Add event listener to ensure loop works
-        backgroundMusic.addEventListener('ended', () => {
+        const loopHandler = () => {
             // This will trigger when audio ends
             // With loop=true, this shouldn't happen, but ensures it loops
             backgroundMusic.currentTime = 0;
             backgroundMusic.play();
-        });
+        };
+        backgroundMusic.addEventListener('ended', loopHandler);
+        // Store reference for cleanup
+        backgroundMusic._loopHandler = loopHandler;
     }
     updateMusicButton();
     updateBackgroundMusicSelector();
@@ -649,9 +732,9 @@ function showDifficultyChangeDialog(newDifficulty, difficultyName, emoji) {
     `;
     
     document.body.appendChild(dialog);
-    
+
     // Add enter key support
-    document.addEventListener('keydown', handleDifficultyDialogKey);
+    addTrackedListener(document, 'keydown', handleDifficultyDialogKey);
 }
 
 // Close difficulty change dialog
@@ -863,9 +946,9 @@ function showCelebration(word) {
     document.body.appendChild(popup);
 
     // Remove popup after delay
-    setTimeout(() => {
+    addTrackedTimeout(() => {
         popup.classList.add('fade-out');
-        setTimeout(() => popup.remove(), 300);
+        addTrackedTimeout(() => popup.remove(), 300);
     }, 2000);
 }
 
@@ -907,9 +990,9 @@ function showWrongAnswer() {
     document.body.appendChild(popup);
 
     // Remove popup after delay
-    setTimeout(() => {
+    addTrackedTimeout(() => {
         popup.classList.add('fade-out');
-        setTimeout(() => popup.remove(), 300);
+        addTrackedTimeout(() => popup.remove(), 300);
     }, 1500);
 }
 
@@ -918,7 +1001,7 @@ function shakeletterSlots() {
     const slots = document.querySelectorAll('.letter-slot.filled');
     slots.forEach(slot => {
         slot.classList.add('shake-wrong');
-        setTimeout(() => {
+        addTrackedTimeout(() => {
             slot.classList.remove('shake-wrong');
         }, 500);
     });
@@ -987,7 +1070,7 @@ function createSimpleConfetti() {
 
     // Schedule removal
     confettiElements.forEach(({ element, removeTime }) => {
-        setTimeout(() => element.remove(), removeTime);
+        addTrackedTimeout(() => element.remove(), removeTime);
     });
 }
 
@@ -1095,7 +1178,7 @@ function renderGame(word, imageDisplay, hint) {
             </div>
         `;
         // Focus on hidden input after a short delay
-        setTimeout(() => {
+        addTrackedTimeout(() => {
             const input = document.getElementById('manualInput');
             if (input) input.focus();
         }, 200);
@@ -1148,7 +1231,7 @@ function selectLetter(letter, index) {
         
         // Auto-check if word is complete
         if (selectedLetters.length === currentWord.word.length) {
-            setTimeout(checkAnswer, 500);
+            addTrackedTimeout(checkAnswer, 500);
         }
     }
 }
@@ -1277,26 +1360,26 @@ function checkManualAnswer(userInput) {
         
         // Show celebration popup and confetti
         showCelebration(currentWord.word);
-        
+
         // Auto-advance to next question after delay
-        setTimeout(() => {
+        addTrackedTimeout(() => {
             nextWord();
         }, 2500);
     } else {
         // Update statistics
         updateWrongAnswer();
-        
+
         // Show wrong answer popup
         showWrongAnswer();
-        
+
         // Re-enable input after delay
-        setTimeout(() => {
+        addTrackedTimeout(() => {
             const input = document.getElementById('manualInput');
             if (input) {
                 input.disabled = false;
                 input.value = '';
             }
-            
+
             // Clear letter slots as well
             const slots = document.querySelectorAll('.letter-slot');
             slots.forEach(slot => {
@@ -1370,7 +1453,7 @@ function handleInputTyping(inputElement) {
 
     // Auto-submit if word is complete (same length as answer)
     if (value.length === maxLetters) {
-        setTimeout(() => {
+        addTrackedTimeout(() => {
             submitManualInput();
         }, 300);
     }
@@ -1396,20 +1479,20 @@ function checkAnswer() {
         document.querySelectorAll('.letter-btn').forEach(btn => {
             btn.disabled = true;
         });
-        
+
         // Auto-advance to next question after delay
-        setTimeout(() => {
+        addTrackedTimeout(() => {
             nextWord();
         }, 2500);
     } else {
         // Update statistics
         updateWrongAnswer();
-        
+
         // Show wrong answer popup
         showWrongAnswer();
-        
+
         // Clear selection after delay
-        setTimeout(clearSelection, 2000);
+        addTrackedTimeout(clearSelection, 2000);
     }
 }
 
@@ -1449,9 +1532,9 @@ function showSkipDialog() {
     `;
     
     document.body.appendChild(dialog);
-    
+
     // Add enter key support
-    document.addEventListener('keydown', handleSkipDialogKey);
+    addTrackedListener(document, 'keydown', handleSkipDialogKey);
 }
 
 // Close skip dialog
@@ -1557,22 +1640,22 @@ function speakWord(word) {
         }
     };
     
-    audio.addEventListener('canplaythrough', () => {
+    addTrackedListener(audio, 'canplaythrough', () => {
         audio.play();
     });
-    
-    audio.addEventListener('ended', () => {
+
+    addTrackedListener(audio, 'ended', () => {
         resumeBackgroundMusic();
     });
-    
-    audio.addEventListener('error', () => {
+
+    addTrackedListener(audio, 'error', () => {
         // Fallback to Web Speech API if MP3 not found
         fallbackToSpeech(word, () => {
             // Resume after speech finishes
-            setTimeout(resumeBackgroundMusic, 1000);
+            addTrackedTimeout(resumeBackgroundMusic, 1000);
         });
     });
-    
+
     // Start loading the audio
     audio.load();
 }
@@ -1586,21 +1669,21 @@ function fallbackToSpeech(word, onEndCallback) {
         utterance.lang = 'id-ID'; // Indonesian
         utterance.rate = 0.8; // Slower for kids
         utterance.pitch = 1.2; // Higher pitch for kids
-        
+
         // Add event listener for when speech ends
         utterance.onend = () => {
             if (onEndCallback) {
                 onEndCallback();
             }
         };
-        
+
         speechSynthesis.speak(utterance);
     }
 }
 
 // Keyboard Support
 function setupKeyboardSupport() {
-    document.addEventListener('keydown', (e) => {
+    addTrackedListener(document, 'keydown', (e) => {
         // Only handle keys when game is running
         if (!currentWord) return;
         
