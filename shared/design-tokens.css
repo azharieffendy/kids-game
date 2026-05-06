@@ -1,0 +1,49 @@
+:root {
+  --bg-page: #fff9e6;
+  --bg-page-alt: #fff0d6;
+  --bg-surface: #ffffff;
+  --bg-surface-soft: rgba(255, 255, 255, 0.82);
+
+  --ink-strong: #1a1a2e;
+  --ink-soft: rgba(26, 26, 46, 0.62);
+  --ink-inverse: #ffffff;
+
+  --accent-math: #ff6b6b;
+  --accent-reading: #4ecdc4;
+  --accent-memory: #a78bfa;
+  --accent-success: #6bcb77;
+  --accent-warning: #ffd93d;
+
+  --border-subtle: rgba(26, 26, 46, 0.12);
+  --border-strong: rgba(26, 26, 46, 0.18);
+
+  --radius-card: 28px;
+  --radius-panel: 24px;
+  --radius-large: 32px;
+  --radius-button: 22px;
+  --radius-pill: 999px;
+
+  --shadow-card: 0 6px 24px rgba(0, 0, 0, 0.08);
+  --shadow-card-strong: 0 18px 40px rgba(0, 0, 0, 0.12);
+  --shadow-sheet: 0 -8px 32px rgba(0, 0, 0, 0.14);
+  --shadow-button: 0 5px 0 rgba(0, 0, 0, 0.12);
+
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  --font-display: "Fredoka One", cursive;
+  --font-body: "Nunito", sans-serif;
+
+  --motion-fast: 160ms;
+  --motion-base: 220ms;
+  --motion-slow: 320ms;
+
+  --container-max: 1200px;
+  --container-narrow: 920px;
+}

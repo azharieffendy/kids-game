@@ -2,267 +2,254 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, shrink-to-fit=no, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="format-detection" content="telephone=no, date=no, email=no, address=no" />
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Math Games</title>
   <meta name="description" content="A playful upgraded math game for early learners: themes, mascot, streaks, music, rewards, achievements." />
-  <!-- Google Font: Quicksand -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../shared/design-tokens.css">
+  <link rel="stylesheet" href="../shared/design-base.css">
+  <link rel="stylesheet" href="../shared/design-components.css">
   <link rel="stylesheet" href="style.css">
 </head>
-<body data-theme="lavender-fields">
-  <div class="wrap">
-    <div class="game-card" role="application" aria-label="Math Fun Game">
-      <header>
-        <div style="display:flex;align-items:center;gap:12px">
-          <h1>Math Games</h1>
-        </div>
+<body class="math-page">
+  <main class="app-shell math-shell" role="application" aria-label="Math Fun Game">
+    <section class="topbar math-topbar">
+      <div class="topbar__copy">
+        <p class="badge topbar__eyebrow">Kids Games</p>
+        <h1 class="topbar__title">Math Games</h1>
+        <p class="topbar__summary">Pilih mode latihan, lalu jawab soal sebelum waktu habis.</p>
+      </div>
 
-        <div class="controls">
-          <button class="btn ghost" id="backToMenuBtn" title="Back to Main Menu">🏠 Menu</button>
-          <button class="btn ghost" id="soundToggle" aria-pressed="true" title="Toggle sound effects">🔊 Sound</button>
-          <button class="btn ghost" id="musicToggle" aria-pressed="true" title="Toggle background music">🎵 Music: On</button>
-          <select id="backgroundMusicSelector" class="theme-select" onchange="changeBackgroundMusic(this.value)" title="Pilih musik latar" style="margin-left: 8px; padding: 8px; border-radius: 8px; border: 2px solid var(--accent); background: white;">
-            <option value="backsound1">🎵 Musik 1</option>
-            <option value="backsound2">🎵 Musik 2</option>
-            <option value="backsound3">🎵 Musik 3</option>
-          </select>
-          <button class="btn ghost" id="learningToggle" aria-pressed="false">📖 Learning Mode</button>
-          <button class="btn ghost" id="pauseBtn" style="display:none">⏸ Pause</button>
-          <button class="btn" id="startBtn" style="background:var(--accent);color:white">🚀 Start</button>
-        </div>
-      </header>
+      <div class="topbar__controls controls" aria-label="Game controls">
+        <button class="btn ghost home-button" id="backToMenuBtn" title="Back to Main Menu">🏠 Menu</button>
+        <button class="btn ghost" id="soundToggle" aria-pressed="true" title="Toggle sound effects">🔊 Sound</button>
+        <button class="btn ghost" id="musicToggle" aria-pressed="true" title="Toggle background music">🎵 Music: On</button>
+        <select id="backgroundMusicSelector" class="theme-select" onchange="changeBackgroundMusic(this.value)" title="Pilih musik latar">
+          <option value="backsound1">🎵 Musik 1</option>
+          <option value="backsound2">🎵 Musik 2</option>
+          <option value="backsound3">🎵 Musik 3</option>
+        </select>
+        <button class="btn ghost" id="learningToggle" aria-pressed="false">📖 Learning Mode</button>
+        <button class="btn ghost" id="pauseBtn" style="display:none">⏸ Pause</button>
+        <button class="btn btn-primary" id="startBtn">🚀 Start</button>
+      </div>
+    </section>
 
-
-      <!-- Game Settings Panel -->
-      <div class="panel settings-panel">
-        <div class="settings-section-grid">
-          <div class="settings-section">
-            <div class="section-label">Difficulty Level</div>
-            <div class="settings-group">
-              <div class="option active" data-difficulty="easy">😊 Easy</div>
-              <div class="option" data-difficulty="medium">😎 Medium</div>
-              <div class="option" data-difficulty="hard">🔥 Hard</div>
-            </div>
-          </div>
-
-          <div class="settings-section">
-            <div class="section-label">Operation Mode</div>
-            <div class="settings-group">
-              <div class="option active" data-mode="mixed">➕➖ Mixed</div>
-              <div class="option" data-mode="addition">➕ Add</div>
-              <div class="option" data-mode="subtraction">➖ Sub</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="settings-section-grid" style="margin-top: 14px;">
-          <div class="settings-section">
-            <div class="section-label">Answer Mode</div>
-            <div class="settings-group">
-              <div class="option active" data-answer-mode="choice">🔘 Multiple Choice</div>
-              <div class="option" data-answer-mode="input">⌨️ Type Answer</div>
-            </div>
-          </div>
-
-          <div class="settings-section">
-            <div class="section-label">Theme</div>
-            <div class="theme-picker">
-              <div class="theme" data-theme="lavender-fields">🦋</div>
-              <div class="theme" data-theme="hydrangea">🌸</div>
-              <div class="theme" data-theme="lush-forest">🌲</div>
-              <div class="theme" data-theme="stormy-morning">⛈️</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Stats Panel -->
-        <div class="panel stats-panel">
-          <div class="section-label">Game Stats</div>
-          <div class="stats-grid">
-            <div class="stat-item">
-              <div class="stat-icon" data-tooltip="Your total score - earn points for correct answers!">🏆</div>
-              <div class="stat-content">
-                <div class="stat-label">Score</div>
-                <div class="stat-value" id="score">0</div>
-              </div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-icon" data-tooltip="Wrong answers - game ends after 5 wrong">❌</div>
-              <div class="stat-content">
-                <div class="stat-label">Wrong</div>
-                <div class="stat-value" id="wrong">0</div>
-              </div>
-            </div>
-            <div class="stat-item timer-stat">
-              <div class="stat-icon" data-tooltip="Time remaining - earn bonus time with correct answers!">⏱</div>
-              <div class="stat-content">
-                <div class="stat-label">Time</div>
-                <div class="stat-value" id="time">60</div>
-                <div class="timer-progress-bar">
-                  <div class="timer-progress-fill" id="timerProgress"></div>
-                </div>
-              </div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-icon" data-tooltip="Current question number">📝</div>
-              <div class="stat-content">
-                <div class="stat-label">Q</div>
-                <div class="stat-value" id="qnum">0</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      <div class="game-area">
-        <div class="left">
-          <div class="question-card">
-            <div class="question" id="question">
-              <div class="q-row q-top">
-                <span class="q-spacer"></span>
-                <span id="q-top" class="q-number"></span>
-              </div>
-              <div class="q-row q-bottom">
-                <span id="q-op" class="q-operator">+</span>
-                <span id="q-bottom-number" class="q-number"></span>
-              </div>
-              <div class="q-line"></div>
-            </div>
-            <div class="answers" id="answers">
-              <button class="answer" data-index="0" tabindex="-1">0</button>
-              <button class="answer" data-index="1" tabindex="-1">0</button>
-              <button class="answer" data-index="2" tabindex="-1">0</button>
-              <button class="answer" data-index="3" tabindex="-1">0</button>
-            </div>
-            <div class="answer-input-container" id="answerInputContainer" style="display: none;">
-              <input type="number" 
-                     id="answerInput" 
-                     class="answer-input" 
-                     placeholder="Type your answer..." 
-                     tabindex="-1"
-                     inputmode="numeric"
-                     autocomplete="off" />
-              <button class="submit-btn" id="submitBtn" tabindex="-1">
-                ✓ Submit
-              </button>
-            </div>
-            <div class="feedback" id="feedback">Welcome! Press Start to play.</div>
+    <section class="math-hud" aria-label="Game status">
+      <div class="stat-card hud-card hud-card--progress">
+        <div class="section-label">Time Left</div>
+        <div class="hud-progress">
+          <div class="hud-progress__value" id="time">60</div>
+          <div class="progress-bar hud-progress__bar" aria-hidden="true">
+            <div class="progress-bar__fill timer-progress-fill" id="timerProgress"></div>
           </div>
         </div>
       </div>
 
-    </div>
-
-    <div class="reward-popup" id="rewardPopup" role="dialog" aria-live="assertive"></div>
-    
-    <!-- Pause Screen -->
-    <div class="pause-overlay" id="pauseOverlay">
-      <div class="pause-content">
-        <div class="pause-emoji">⏸️</div>
-        <h2 class="pause-title">Game Paused</h2>
-        <p class="pause-subtitle">Take a break! Click Resume when ready.</p>
-        <div class="pause-actions">
-          <button class="btn btn-large btn-primary" id="resumeBtn">▶️ Resume Game</button>
-          <button class="btn btn-large ghost" id="pauseChangeSettingsBtn">⚙️ Change Settings</button>
+      <div class="stat-card hud-card hud-card--stats">
+        <div class="section-label">Game Stats</div>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-icon" data-tooltip="Your total score - earn points for correct answers!">🏆</div>
+            <div class="stat-content">
+              <div class="stat-label">Score</div>
+              <div class="stat-value" id="score">0</div>
+            </div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-icon" data-tooltip="Wrong answers - game ends after 5 wrong">❌</div>
+            <div class="stat-content">
+              <div class="stat-label">Wrong</div>
+              <div class="stat-value" id="wrong">0</div>
+            </div>
+          </div>
+          <div class="stat-item timer-stat">
+            <div class="stat-icon" data-tooltip="Current question number">📝</div>
+            <div class="stat-content">
+              <div class="stat-label">Q</div>
+              <div class="stat-value" id="qnum">0</div>
+            </div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-icon" data-tooltip="Current streak bonus">🔥</div>
+            <div class="stat-content">
+              <div class="stat-label">Combo</div>
+              <div class="stat-value" id="combo">1</div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </section>
 
-    <!-- Final Score Screen -->
-    <div class="score-screen" id="scoreScreen" role="dialog" aria-label="Game Over">
-      <div class="score-screen-content">
-        <div class="score-header">
-          <div class="score-emoji" id="scoreEmoji">🎉</div>
-          <h2 class="score-title" id="scoreTitle">Game Over!</h2>
-          <div class="score-subtitle" id="scoreSubtitle">Time's Up!</div>
-        </div>
-        
-        <div class="score-main">
-          <div class="final-score">
-            <div class="final-score-label">Final Score</div>
-            <div class="final-score-value" id="finalScore">0</div>
-            <div class="high-score-badge" id="highScoreBadge">🏆 New High Score!</div>
+    <section class="settings-sheet settings-panel math-settings" aria-labelledby="settings-heading">
+      <div class="settings-sheet__header">
+        <p class="section-label" id="settings-heading">Game Settings</p>
+      </div>
+
+      <div class="settings-section-grid">
+        <div class="settings-section">
+          <div class="section-label">Difficulty Level</div>
+          <div class="settings-group">
+            <button type="button" class="option active" data-difficulty="easy" aria-pressed="true">😊 Easy</button>
+            <button type="button" class="option" data-difficulty="medium" aria-pressed="false">😎 Medium</button>
+            <button type="button" class="option" data-difficulty="hard" aria-pressed="false">🔥 Hard</button>
           </div>
         </div>
-        
-        <div class="score-breakdown">
-          <div class="breakdown-title">📊 Game Statistics</div>
-          <div class="breakdown-grid">
-            <div class="breakdown-item">
-              <div class="breakdown-icon">✅</div>
-              <div class="breakdown-content">
-                <div class="breakdown-label">Correct Answers</div>
-                <div class="breakdown-value" id="correctAnswers">0</div>
-              </div>
-            </div>
-            <div class="breakdown-item">
-              <div class="breakdown-icon">❌</div>
-              <div class="breakdown-content">
-                <div class="breakdown-label">Wrong Answers</div>
-                <div class="breakdown-value" id="wrongAnswers">0</div>
-              </div>
-            </div>
-            <div class="breakdown-item">
-              <div class="breakdown-icon">🎯</div>
-              <div class="breakdown-content">
-                <div class="breakdown-label">Accuracy</div>
-                <div class="breakdown-value" id="accuracy">0%</div>
-              </div>
-            </div>
-            <div class="breakdown-item">
-              <div class="breakdown-icon">⚡</div>
-              <div class="breakdown-content">
-                <div class="breakdown-label">Avg. Speed</div>
-                <div class="breakdown-value" id="avgSpeed">0s</div>
-              </div>
-            </div>
-            <div class="breakdown-item">
-              <div class="breakdown-icon">🔥</div>
-              <div class="breakdown-content">
-                <div class="breakdown-label">Best Streak</div>
-                <div class="breakdown-value" id="bestStreak">0</div>
-              </div>
-            </div>
-            <div class="breakdown-item">
-              <div class="breakdown-icon">📝</div>
-              <div class="breakdown-content">
-                <div class="breakdown-label">Total Questions</div>
-                <div class="breakdown-value" id="totalQuestions">0</div>
-              </div>
-            </div>
+
+        <div class="settings-section">
+          <div class="section-label">Operation Mode</div>
+          <div class="settings-group">
+            <button type="button" class="option active" data-mode="mixed" aria-pressed="true">➕➖ Mixed</button>
+            <button type="button" class="option" data-mode="addition" aria-pressed="false">➕ Add</button>
+            <button type="button" class="option" data-mode="subtraction" aria-pressed="false">➖ Sub</button>
           </div>
         </div>
-        
-        <div class="score-actions">
-          <button class="btn btn-large btn-primary" id="playAgainBtn">🔄 Play Again</button>
-          <button class="btn btn-large btn-ghost" id="changeSettingsBtn">⚙️ Change Settings</button>
+      </div>
+
+      <div class="settings-section-grid math-settings__secondary">
+        <div class="settings-section">
+          <div class="section-label">Answer Mode</div>
+          <div class="settings-group">
+            <button type="button" class="option active" data-answer-mode="choice" aria-pressed="true">🔘 Multiple Choice</button>
+            <button type="button" class="option" data-answer-mode="input" aria-pressed="false">⌨️ Type Answer</button>
+          </div>
         </div>
+      </div>
+    </section>
+
+    <section class="question-stage" aria-label="Question area">
+      <div class="question-card">
+        <div class="question-card__header">
+          <div class="section-label">Question</div>
+          <div class="mini">Answer the current problem to continue the streak.</div>
+        </div>
+
+        <div class="question" id="question">
+          <div class="q-row q-top">
+            <span class="q-spacer"></span>
+            <span id="q-top" class="q-number"></span>
+          </div>
+          <div class="q-row q-bottom">
+            <span id="q-op" class="q-operator">+</span>
+            <span id="q-bottom-number" class="q-number"></span>
+          </div>
+          <div class="q-line"></div>
+        </div>
+
+        <div class="choices answers" id="answers">
+          <button class="answer" data-index="0" tabindex="-1">0</button>
+          <button class="answer" data-index="1" tabindex="-1">0</button>
+          <button class="answer" data-index="2" tabindex="-1">0</button>
+          <button class="answer" data-index="3" tabindex="-1">0</button>
+        </div>
+
+        <div class="answer-input-container" id="answerInputContainer" style="display: none;">
+          <input type="number"
+                 id="answerInput"
+                 class="answer-input"
+                 placeholder="Type your answer..."
+                 tabindex="-1"
+                 inputmode="numeric"
+                 autocomplete="off" />
+          <button class="submit-btn" id="submitBtn" tabindex="-1">✓ Submit</button>
+        </div>
+
+        <div class="feedback" id="feedback">Welcome! Press Start to play.</div>
+      </div>
+    </section>
+  </main>
+
+  <div class="reward-popup" id="rewardPopup" role="dialog" aria-live="assertive"></div>
+
+  <div class="pause-overlay" id="pauseOverlay">
+    <div class="pause-content">
+      <div class="pause-emoji">⏸️</div>
+      <h2 class="pause-title">Game Paused</h2>
+      <p class="pause-subtitle">Take a break! Click Resume when ready.</p>
+      <div class="pause-actions">
+        <button class="btn btn-large btn-primary" id="resumeBtn">▶️ Resume Game</button>
+        <button class="btn btn-large ghost" id="pauseChangeSettingsBtn">⚙️ Change Settings</button>
       </div>
     </div>
   </div>
 
-  <script>
-    // Viewport lock - prevent any zoom changes
-    (function() {
-      const viewport = document.querySelector('meta[name="viewport"]');
-      const resetViewport = () => {
-        viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, shrink-to-fit=no, viewport-fit=cover');
-      };
-      window.addEventListener('resize', resetViewport);
-      window.addEventListener('orientationchange', resetViewport);
-      // Use passive: true for better scroll performance on mobile
-      document.addEventListener('touchstart', function(e) {
-        if (e.touches.length > 1) {
-          e.preventDefault();
-        }
-      }, { passive: true });
-    })();
-  </script>
+  <div class="score-screen" id="scoreScreen" role="dialog" aria-label="Game Over">
+    <div class="score-screen-content">
+      <div class="score-header">
+        <div class="score-emoji" id="scoreEmoji">🎉</div>
+        <h2 class="score-title" id="scoreTitle">Game Over!</h2>
+        <div class="score-subtitle" id="scoreSubtitle">Time's Up!</div>
+      </div>
+
+      <div class="score-main">
+        <div class="final-score">
+          <div class="final-score-label">Final Score</div>
+          <div class="final-score-value" id="finalScore">0</div>
+          <div class="high-score-badge" id="highScoreBadge">🏆 New High Score!</div>
+        </div>
+      </div>
+
+      <div class="score-breakdown">
+        <div class="breakdown-title">📊 Game Statistics</div>
+        <div class="breakdown-grid">
+          <div class="breakdown-item">
+            <div class="breakdown-icon">✅</div>
+            <div class="breakdown-content">
+              <div class="breakdown-label">Correct Answers</div>
+              <div class="breakdown-value" id="correctAnswers">0</div>
+            </div>
+          </div>
+          <div class="breakdown-item">
+            <div class="breakdown-icon">❌</div>
+            <div class="breakdown-content">
+              <div class="breakdown-label">Wrong Answers</div>
+              <div class="breakdown-value" id="wrongAnswers">0</div>
+            </div>
+          </div>
+          <div class="breakdown-item">
+            <div class="breakdown-icon">🎯</div>
+            <div class="breakdown-content">
+              <div class="breakdown-label">Accuracy</div>
+              <div class="breakdown-value" id="accuracy">0%</div>
+            </div>
+          </div>
+          <div class="breakdown-item">
+            <div class="breakdown-icon">⚡</div>
+            <div class="breakdown-content">
+              <div class="breakdown-label">Avg. Speed</div>
+              <div class="breakdown-value" id="avgSpeed">0s</div>
+            </div>
+          </div>
+          <div class="breakdown-item">
+            <div class="breakdown-icon">🔥</div>
+            <div class="breakdown-content">
+              <div class="breakdown-label">Best Streak</div>
+              <div class="breakdown-value" id="bestStreak">0</div>
+            </div>
+          </div>
+          <div class="breakdown-item">
+            <div class="breakdown-icon">📝</div>
+            <div class="breakdown-content">
+              <div class="breakdown-label">Total Questions</div>
+              <div class="breakdown-value" id="totalQuestions">0</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="score-actions">
+        <button class="btn btn-large btn-primary" id="playAgainBtn">🔄 Play Again</button>
+        <button class="btn btn-large btn-ghost" id="changeSettingsBtn">⚙️ Change Settings</button>
+      </div>
+    </div>
+  </div>
+
   <script src="game.js"></script>
 </body>
 </html>

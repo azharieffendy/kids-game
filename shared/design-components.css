@@ -1,0 +1,113 @@
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  border-radius: var(--radius-card);
+  padding: 14px 20px;
+  color: var(--ink-inverse);
+  background: linear-gradient(135deg, var(--accent-math), var(--accent-memory));
+  box-shadow: var(--shadow-card);
+}
+
+.primary-button {
+  border: 0;
+  border-radius: var(--radius-button);
+  padding: 14px 20px;
+  font: 800 18px var(--font-display);
+  color: var(--ink-strong);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-button);
+  cursor: pointer;
+  transition: transform var(--motion-fast) ease, box-shadow var(--motion-fast) ease;
+}
+
+.primary-button:hover {
+  transform: translateY(-1px);
+}
+
+.primary-button:active {
+  transform: translateY(2px);
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.12);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--ink-strong);
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+.stat-card {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-5);
+  border-radius: var(--radius-panel);
+  background: var(--bg-surface-soft);
+  box-shadow: var(--shadow-card);
+}
+
+.progress-bar {
+  position: relative;
+  overflow: hidden;
+  height: 16px;
+  border-radius: var(--radius-pill);
+  background: rgba(26, 26, 46, 0.12);
+}
+
+.progress-bar__fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent-reading), var(--accent-success));
+}
+
+.modal {
+  border: 0;
+  border-radius: var(--radius-large);
+  padding: var(--space-6);
+  background: var(--bg-surface);
+  color: var(--ink-strong);
+  box-shadow: var(--shadow-card-strong);
+}
+
+.settings-sheet {
+  border-radius: var(--radius-large) var(--radius-large) 0 0;
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-sheet);
+}
+
+.game-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  border-radius: var(--radius-card);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-card);
+  text-decoration: none;
+  color: inherit;
+  border: 1px solid var(--border-subtle);
+}
+
+.game-card__title {
+  margin: 0;
+  font: 800 1.1rem var(--font-display);
+}
+
+.game-card__meta {
+  margin: 0;
+  color: var(--ink-soft);
+}
+
+.game-card__chip {
+  align-self: start;
+  justify-self: end;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  background: rgba(26, 26, 46, 0.08);
+  font-weight: 800;
+}

@@ -1,2 +1,8 @@
 /.serena
 /.claude
+CLAUDE.md
+AGENTS.md
+.codex
+/node_modules
+/test-results
+/playwright-report

@@ -121,7 +121,6 @@ let musicEnabled = true;
 let backgroundMusic = null;
 let currentDifficulty = null;
 let currentSoundTheme = 'fun'; // fun, calm, exciting
-let currentVisualTheme = 'default'; // default, cotton-candy, ocean, sunset, forest
 let currentBackgroundMusic = 'backsound3'; // Default background music
 let availableBackgroundMusic = []; // Available background music files
 let answerMode = 'click'; // click or input
@@ -254,10 +253,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     loadAnswerMode();
     loadBackgroundMusicFiles();
     updateSoundThemeSelector();
-    updateVisualThemeSelector();
     updateBackgroundMusicSelector();
     updateDifficultyDisplay();
-    applyVisualTheme();
     initBackgroundMusic();
     createBackgroundParticles();
     setupKeyboardSupport();
@@ -454,11 +451,6 @@ function loadSoundSettings() {
             currentSoundTheme = savedTheme;
         }
 
-        const savedVisualTheme = localStorage.getItem('visualTheme');
-        if (savedVisualTheme) {
-            currentVisualTheme = savedVisualTheme;
-        }
-
         const savedBackgroundMusic = localStorage.getItem('backgroundMusic');
         if (savedBackgroundMusic) {
             currentBackgroundMusic = savedBackgroundMusic;
@@ -468,7 +460,6 @@ function loadSoundSettings() {
         soundEnabled = true;
         musicEnabled = true;
         currentSoundTheme = 'fun';
-        currentVisualTheme = 'default';
         currentBackgroundMusic = 'backsound3';
     }
 }
@@ -506,10 +497,8 @@ function saveSoundSettings() {
         localStorage.setItem('soundEnabled', soundEnabled.toString());
         localStorage.setItem('musicEnabled', musicEnabled.toString());
         localStorage.setItem('soundTheme', currentSoundTheme);
-        localStorage.setItem('visualTheme', currentVisualTheme);
         localStorage.setItem('backgroundMusic', currentBackgroundMusic);
     } catch (e) {
-        alert('Cannot save settings. Storage may be full or disabled.');
     }
 }
 
@@ -524,8 +513,9 @@ function toggleSound() {
 function updateSoundButton() {
     const soundBtn = document.getElementById('soundToggle');
     if (soundBtn) {
-        soundBtn.textContent = soundEnabled ? '🔊' : '🔇';
+        soundBtn.textContent = soundEnabled ? '🔊 Sound' : '🔇 Sound';
         soundBtn.title = soundEnabled ? 'Matikan suara' : 'Hidupkan suara';
+        soundBtn.setAttribute('aria-pressed', String(soundEnabled));
     }
 }
 
@@ -590,8 +580,9 @@ function toggleMusic() {
 function updateMusicButton() {
     const musicBtn = document.getElementById('musicToggle');
     if (musicBtn) {
-        musicBtn.textContent = musicEnabled ? '🎵' : '🎶';
+        musicBtn.textContent = musicEnabled ? '🎵 Music: On' : '🎵 Music: Off';
         musicBtn.title = musicEnabled ? 'Matikan musik' : 'Hidupkan musik';
+        musicBtn.setAttribute('aria-pressed', String(musicEnabled));
     }
 }
 
@@ -633,43 +624,6 @@ function updateSoundThemeSelector() {
     const themeSelect = document.getElementById('soundTheme');
     if (themeSelect) {
         themeSelect.value = currentSoundTheme;
-    }
-}
-
-// Change visual theme
-function changeVisualTheme(theme) {
-    currentVisualTheme = theme;
-    saveSoundSettings();
-    applyVisualTheme();
-}
-
-// Apply visual theme
-function applyVisualTheme() {
-    const body = document.body;
-
-    // Remove all theme classes
-    body.classList.remove('cotton-candy-theme', 'ocean-theme', 'sunset-theme', 'forest-theme');
-
-    // Add current theme class
-    if (currentVisualTheme === 'cotton-candy') {
-        body.classList.add('cotton-candy-theme');
-    } else if (currentVisualTheme === 'ocean') {
-        body.classList.add('ocean-theme');
-    } else if (currentVisualTheme === 'sunset') {
-        body.classList.add('sunset-theme');
-    } else if (currentVisualTheme === 'forest') {
-        body.classList.add('forest-theme');
-    }
-
-    // Recreate particles with new theme colors
-    recreateParticles();
-}
-
-// Update visual theme selector
-function updateVisualThemeSelector() {
-    const themeSelect = document.getElementById('visualTheme');
-    if (themeSelect) {
-        themeSelect.value = currentVisualTheme;
     }
 }
 
@@ -1107,19 +1061,9 @@ async function showWordGame() {
     const randomExtras = extraLetters.sort(() => Math.random() - 0.5).slice(0, 3);
     availableLetters = shuffleArray([...correctLetters, ...randomExtras]);
     
-    const content = document.getElementById('game-content');
-    
     // Escape user input to prevent XSS
-    const safeEmoji = escapeHtml(currentWord.emoji);
-    const safeImageUrl = escapeHtml(currentWord.imageUrl);
-    const safeWord = escapeHtml(currentWord.word);
     const safeHint = escapeHtml(currentWord.hint);
-    
-    const imageDisplay = currentWord.emoji 
-        ? `<div class="emoji">${safeEmoji}</div>`
-        : (currentWord.imageUrl 
-            ? `<img src="${safeImageUrl}" alt="${safeWord}" class="word-image">` 
-            : `<div class="emoji">❓</div>`);
+    const imageDisplay = getCurrentWordImageDisplay();
     
     // Update difficulty display in header
     updateDifficultyDisplay();
@@ -1128,10 +1072,45 @@ async function showWordGame() {
     renderGame(currentWord.word, imageDisplay, safeHint);
 }
 
+function getWordDisplayClasses(wordLength) {
+    const classes = ['word-display'];
+
+    if (wordLength >= 7) {
+        classes.push('word-display--long');
+    }
+
+    if (wordLength >= 9) {
+        classes.push('word-display--extra-long');
+    }
+
+    return classes.join(' ');
+}
+
+function getCurrentWordImageDisplay() {
+    if (!currentWord) {
+        return '<div class="emoji">❓</div>';
+    }
+
+    const safeEmoji = escapeHtml(currentWord.emoji);
+    const safeImageUrl = escapeHtml(currentWord.imageUrl);
+    const safeWord = escapeHtml(currentWord.word);
+
+    if (currentWord.emoji) {
+        return `<div class="emoji">${safeEmoji}</div>`;
+    }
+
+    if (currentWord.imageUrl) {
+        return `<img src="${safeImageUrl}" alt="${safeWord}" class="word-image">`;
+    }
+
+    return '<div class="emoji">❓</div>';
+}
+
 // Render game (simplified version)
 function renderGame(word, imageDisplay, hint) {
     // Escape word for use in attributes to prevent attribute injection
     const safeWordAttr = escapeHtml(word);
+    const wordDisplayClasses = getWordDisplayClasses(word.length);
     
     // Always show voice button - will handle audio detection in speakWord function
     const voiceButton = `
@@ -1146,36 +1125,39 @@ function renderGame(word, imageDisplay, hint) {
     if (answerMode === 'input') {
         // Manual input mode
         content.innerHTML = `
-            <div class="word-game">
-                <div class="picture-display">
+            <article class="word-game reading-game">
+                <section class="picture-display">
                     <div class="image-container">
                         ${imageDisplay}
                         ${voiceButton}
                     </div>
-                    <div class="hint">Petunjuk: ${hint}</div>
-                </div>
+                    <div class="hint reading-hint">Petunjuk: ${hint}</div>
+                </section>
                 
-                <div class="word-display" id="wordDisplay">
+                <section class="word-stage">
+                    <div class="${wordDisplayClasses}" id="wordDisplay" style="--slot-count: ${word.length};">
                     ${word.split('').map(() => '<div class="letter-slot"></div>').join('')}
-                </div>
+                    </div>
+                </section>
                 
                 <!-- Hidden input for keyboard capture -->
                 <input type="text" 
                        id="manualInput" 
                        maxlength="${word.length}"
+                       aria-label="Ketik jawaban huruf demi huruf"
                        autocomplete="off"
                        autocorrect="off"
                        autocapitalize="characters"
                        style="position: absolute; left: -9999px; opacity: 0;"
                        oninput="handleInputTyping(this)">
                 
-                <div class="action-buttons">
+                <div class="action-buttons action-row">
                     <button class="clear-btn" onclick="clearManualInput()">🗑️ Hapus</button>
                     <button class="skip-btn" onclick="skipQuestion()">⏭️ Lewati</button>
                 </div>
                 
-                <div id="feedback"></div>
-            </div>
+                <div id="feedback" class="feedback" aria-live="polite"></div>
+            </article>
         `;
         // Focus on hidden input after a short delay
         addTrackedTimeout(() => {
@@ -1186,20 +1168,23 @@ function renderGame(word, imageDisplay, hint) {
         // Click mode (original)
         // Escape letters for use in attributes
         content.innerHTML = `
-            <div class="word-game">
-                <div class="picture-display">
+            <article class="word-game reading-game">
+                <section class="picture-display">
                     <div class="image-container">
                         ${imageDisplay}
                         ${voiceButton}
                     </div>
-                    <div class="hint">Petunjuk: ${hint}</div>
-                </div>
+                    <div class="hint reading-hint">Petunjuk: ${hint}</div>
+                </section>
                 
-                <div class="word-display" id="wordDisplay">
+                <section class="word-stage">
+                    <div class="${wordDisplayClasses}" id="wordDisplay" style="--slot-count: ${word.length};">
                     ${word.split('').map(() => '<div class="letter-slot"></div>').join('')}
-                </div>
+                    </div>
+                </section>
                 
-                <div class="letter-options" id="letterOptions">
+                <section class="letter-bank" aria-label="Huruf tersedia">
+                    <div class="letter-options" id="letterOptions">
                     ${availableLetters.map((letter, index) => {
                         const safeLetter = escapeHtml(letter);
                         return `
@@ -1208,15 +1193,16 @@ function renderGame(word, imageDisplay, hint) {
                         </button>
                     `;
                     }).join('')}
-                </div>
+                    </div>
+                </section>
                 
-                <div class="action-buttons">
+                <div class="action-buttons action-row">
                     <button class="clear-btn" onclick="clearSelection()">🗑️ Hapus</button>
                     <button class="skip-btn" onclick="skipQuestion()">⏭️ Lewati</button>
                 </div>
                 
-                <div id="feedback"></div>
-            </div>
+                <div id="feedback" class="feedback" aria-live="polite"></div>
+            </article>
         `;
     }
 }
@@ -1294,6 +1280,12 @@ function setAnswerMode(mode) {
         localStorage.setItem('answerMode', mode);
     } catch (e) {
         // Cannot save answer mode - silent fail
+    }
+
+    if (currentWord) {
+        selectedLetters = [];
+        previousInputLength = 0;
+        renderGame(currentWord.word, getCurrentWordImageDisplay(), escapeHtml(currentWord.hint));
     }
 }
 
@@ -1573,22 +1565,53 @@ function showGameComplete() {
     const difficultyText = currentDifficulty === 'easy' ? 'Mudah' : 
                           currentDifficulty === 'medium' ? 'Sedang' : 
                           currentDifficulty === 'hard' ? 'Sulit' : '';
+    const totalWords = totalQuestionsInSession || completedQuestionsInSession || 0;
+    const accuracy = gameStats.total > 0
+        ? Math.round((gameStats.correct / gameStats.total) * 100)
+        : 0;
+    const summaryMessage = difficultyText
+        ? `Kamu menyelesaikan semua kata level ${difficultyText}!`
+        : 'Kamu hebat!';
+    const encouragement = accuracy >= 90
+        ? 'Rapi sekali. Siap naik level atau main lagi?'
+        : accuracy >= 70
+            ? 'Bagus. Sedikit latihan lagi bikin susun katanya makin cepat.'
+            : 'Mantap. Coba satu ronde lagi untuk naikkan akurasinya.';
     
     content.innerHTML = `
-        <div style="text-align: center; padding: 40px;">
-            <h2>🎉 Selesai! 🎉</h2>
-            <p style="font-size: 1.5em; margin: 20px 0;">
-                ${difficultyText ? `Kamu menyelesaikan semua kata level ${difficultyText}!` : 'Kamu hebat!'}
-            </p>
-            <div style="margin: 20px 0;">
-                <button class="next-btn" onclick="startGame('${currentDifficulty}')" style="margin: 5px;">
-                    🔄 Main Lagi
-                </button>
-                <button class="skip-btn" onclick="backToMenu()" style="margin: 5px;">
-                    🏠 Menu Utama
-                </button>
-            </div>
-        </div>
+        <section class="reading-complete-screen" aria-labelledby="reading-complete-title">
+            <article class="completion-card" aria-live="polite">
+                <p class="badge completion-card__badge">Sesi Selesai</p>
+                <div class="completion-card__emoji" aria-hidden="true">🎉</div>
+                <h2 id="reading-complete-title" class="completion-card__title">Semua kata sudah beres!</h2>
+                <p class="completion-card__summary">${summaryMessage}</p>
+                <p class="completion-card__support">${encouragement}</p>
+
+                <div class="completion-stats" aria-label="Ringkasan hasil sesi">
+                    <div class="completion-stat">
+                        <span class="completion-stat__label">Benar</span>
+                        <strong class="completion-stat__value">${gameStats.correct}</strong>
+                    </div>
+                    <div class="completion-stat">
+                        <span class="completion-stat__label">Akurasi</span>
+                        <strong class="completion-stat__value">${accuracy}%</strong>
+                    </div>
+                    <div class="completion-stat">
+                        <span class="completion-stat__label">Kata</span>
+                        <strong class="completion-stat__value">${completedQuestionsInSession} / ${totalWords}</strong>
+                    </div>
+                </div>
+
+                <div class="action-row completion-actions">
+                    <button class="next-btn" onclick="startGame('${currentDifficulty}')">
+                        🔄 Main Lagi
+                    </button>
+                    <button class="skip-btn" onclick="backToMenu()">
+                        🏠 Menu Utama
+                    </button>
+                </div>
+            </article>
+        </section>
     `;
 }
 

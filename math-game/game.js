@@ -70,7 +70,7 @@ const Game = (() => {
 
   const refs = {
     question: $('#question'), answers: $('#answers'), feedback: $('#feedback'),
-    score: $('#score'), wrong: $('#wrong'), time: $('#time'), qnum: $('#qnum'),
+    score: $('#score'), wrong: $('#wrong'), time: $('#time'), qnum: $('#qnum'), combo: $('#combo'),
     startBtn: $('#startBtn'), learningToggle: $('#learningToggle'), musicToggle: $('#musicToggle'),
     pauseBtn: $('#pauseBtn'), soundToggle: $('#soundToggle'), backToMenuBtn: $('#backToMenuBtn'),
     rewardPopup: $('#rewardPopup'), questionCard: document.querySelector('.question-card'),
@@ -100,6 +100,7 @@ const Game = (() => {
       this.bgAudioElement = null;
       this.musicEnabled = true;
       this.soundEnabled = true;
+      this.bgPlaying = false;
       this.currentBackgroundMusic = 'backsound1';
       this.availableBackgroundMusic = [
         { name: 'backsound1', displayName: '🎵 Musik 1' },
@@ -203,13 +204,16 @@ const Game = (() => {
           const musicPath = `../audio/backsound/${this.currentBackgroundMusic}.mp3`;
           this.bgAudioElement.src = musicPath;
           this.bgAudioElement.load();
+          this.bgPlaying = true;
           this.bgAudioElement.play().then(() => {
             // Music playing successfully
           }).catch(e => {
+            this.bgPlaying = false;
             // Could not play background music - silent fail
           });
         }
       }catch(e){
+        this.bgPlaying = false;
         // Music not available - silent fail
       }
     }
@@ -219,6 +223,7 @@ const Game = (() => {
         this.bgAudioElement.pause();
         this.bgAudioElement.currentTime = 0;
       }
+      this.bgPlaying = false;
     }
     
     changeBackgroundMusic(musicName){
@@ -286,6 +291,7 @@ const Game = (() => {
     refs.score.textContent = state.score;
     refs.wrong.textContent = state.wrong;
     refs.qnum.textContent = state.qnum;
+    if(refs.combo) refs.combo.textContent = state.combo;
     updateTimerDisplay();
   }
 
@@ -315,8 +321,12 @@ const Game = (() => {
 
   // Helper to set active option in a group
   function setActiveOption(selector, clickedElement){
-    document.querySelectorAll(selector).forEach(x => x.classList.remove('active'));
+    document.querySelectorAll(selector).forEach(x => {
+      x.classList.remove('active');
+      if(x.hasAttribute('aria-pressed')) x.setAttribute('aria-pressed', 'false');
+    });
     clickedElement.classList.add('active');
+    if(clickedElement.hasAttribute('aria-pressed')) clickedElement.setAttribute('aria-pressed', 'true');
   }
 
   // Question generation
@@ -467,23 +477,14 @@ const Game = (() => {
       refs.answers.style.display = 'grid';
       refs.answerInputContainer.style.display = 'none';
 
-      // Reuse existing buttons - just update text and handler
+      // Reuse existing buttons - just update displayed values.
       const buttons = $$('.answer');
       buttons.forEach((btn, index) => {
         const value = arr[index];
-
-        // Remove old listener by cloning and replacing
-        const newBtn = btn.cloneNode(true);
-        btn.parentNode.replaceChild(newBtn, btn);
-
-        // Update button
-        newBtn.textContent = value;
-        newBtn.className = 'answer';
-        newBtn.disabled = false;
-
-        // Add new listener using tracked system
-        const handler = ()=> handleAnswer(value, newBtn);
-        addTrackedListener(newBtn, 'click', handler);
+        btn.textContent = value;
+        btn.dataset.answer = value;
+        btn.className = 'answer';
+        btn.disabled = false;
       });
     }
 
@@ -981,12 +982,11 @@ const Game = (() => {
       addTrackedListener(o, 'click', () => setActiveOption('.option[data-answer-mode]', o));
     });
 
-    // Theme picker
-    document.querySelectorAll('.theme').forEach(t => {
-      addTrackedListener(t, 'click', () => {
-        const themeName = t.dataset.theme;
-        document.body.setAttribute('data-theme', themeName);
-        setActiveOption('.theme', t);
+    // Answer buttons
+    document.querySelectorAll('.answer').forEach(btn => {
+      addTrackedListener(btn, 'click', () => {
+        const value = Number(btn.dataset.answer);
+        handleAnswer(value, btn);
       });
     });
 
@@ -1027,7 +1027,7 @@ const Game = (() => {
     addTrackedListener(refs.musicToggle, 'click', () => {
       const isEnabled = audio.toggleMusic();
       refs.musicToggle.setAttribute('aria-pressed', isEnabled);
-      refs.musicToggle.textContent = isEnabled ? '🎵 Music: On' : '🎵 Music';
+      refs.musicToggle.textContent = isEnabled ? '🎵 Music: On' : '🎵 Music: Off';
     });
 
     // Learning mode toggle
@@ -1102,11 +1102,6 @@ const Game = (() => {
     load();
     setupUI();
     updateUI();
-    
-    // Set active theme based on current body data-theme
-    const currentTheme = document.body.getAttribute('data-theme') || 'lavender-fields';
-    const activeThemeBtn = document.querySelector(`.theme[data-theme="${currentTheme}"]`);
-    if(activeThemeBtn) activeThemeBtn.classList.add('active');
   }
 
   return { init, startGame, resetGame, cleanup, state };

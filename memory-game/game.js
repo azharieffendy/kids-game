@@ -297,6 +297,13 @@ const CARD_THEMES = {
     emojis: ['😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '😊', '😇', '😍', '🥰', '😘', '😗', '😙', '😚', '😋', '😛', '😜', '🤪', '😝', '🤑', '🤗', '🤭', '🤫', '🤔', '🤐', '🤨', '😐', '😑', '😶', '😏', '😒', '🙄', '😬', '🤥', '😌', '😔', '😪', '🤤', '😴', '😷', '🤒', '🤕', '🤢', '🤮', '🤧', '🥵', '🥶']
 };
 
+const CARD_THEME_LABELS = {
+    animals: 'Hewan',
+    fruits: 'Buah',
+    vehicles: 'Kendaraan',
+    emojis: 'Emoji'
+};
+
 // ========================================
 // GAME STATE
 // ========================================
@@ -312,8 +319,7 @@ let gameState = {
     timerInterval: null,
     soundEnabled: true,
     musicEnabled: true,
-    soundTheme: 'fun',
-    visualTheme: 'default'
+    soundTheme: 'fun'
 };
 
 // Statistics tracking
@@ -339,6 +345,10 @@ function formatTime(seconds) {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
+function getCardThemeLabel(theme) {
+    return CARD_THEME_LABELS[theme] || theme;
 }
 
 // ========================================
@@ -401,12 +411,6 @@ function selectGridSize(cols, rows) {
 // ========================================
 // THEME FUNCTIONS
 // ========================================
-function changeVisualTheme(theme) {
-    gameState.visualTheme = theme;
-    document.body.className = `theme-${theme}`;
-    saveSettings();
-}
-
 function changeSoundTheme(theme) {
     gameState.soundTheme = theme;
     saveSettings();
@@ -430,14 +434,17 @@ function setCardTheme(theme) {
 // ========================================
 function toggleSound() {
     gameState.soundEnabled = !gameState.soundEnabled;
-    document.getElementById('soundToggle').textContent = gameState.soundEnabled ? '🔊' : '🔇';
+    const soundToggle = document.getElementById('soundToggle');
+    soundToggle.textContent = gameState.soundEnabled ? '🔊 Sound' : '🔇 Sound';
+    soundToggle.setAttribute('aria-pressed', String(gameState.soundEnabled));
     saveSettings();
 }
 
 function toggleMusic() {
     gameState.musicEnabled = !gameState.musicEnabled;
     const btn = document.getElementById('musicToggle');
-    btn.textContent = gameState.musicEnabled ? '🎵' : '🔇';
+    btn.textContent = gameState.musicEnabled ? '🎵 Music: On' : '🎵 Music: Off';
+    btn.setAttribute('aria-pressed', String(gameState.musicEnabled));
 
     if (gameState.musicEnabled) {
         audioSystem.playBackgroundMusic();
@@ -456,12 +463,10 @@ function saveSettings() {
             soundEnabled: gameState.soundEnabled,
             musicEnabled: gameState.musicEnabled,
             soundTheme: gameState.soundTheme,
-            visualTheme: gameState.visualTheme,
             cardTheme: gameState.cardTheme,
             backgroundMusic: audioSystem.currentBackgroundMusic
         }));
     } catch (e) {
-        // Cannot save settings - silent fail
     }
 }
 
@@ -473,28 +478,24 @@ function loadSettings() {
             gameState.soundEnabled = settings.soundEnabled !== undefined ? settings.soundEnabled : true;
             gameState.musicEnabled = settings.musicEnabled !== undefined ? settings.musicEnabled : true;
             gameState.soundTheme = settings.soundTheme || 'fun';
-            gameState.visualTheme = settings.visualTheme || 'default';
             gameState.cardTheme = settings.cardTheme || 'animals';
 
             if (settings.backgroundMusic) {
                 audioSystem.currentBackgroundMusic = settings.backgroundMusic;
             }
 
-            // Apply settings to UI
-            document.getElementById('soundToggle').textContent = gameState.soundEnabled ? '🔊' : '🔇';
-            document.getElementById('musicToggle').textContent = gameState.musicEnabled ? '🎵' : '🔇';
-            document.getElementById('visualTheme').value = gameState.visualTheme;
+            document.getElementById('soundToggle').textContent = gameState.soundEnabled ? '🔊 Sound' : '🔇 Sound';
+            document.getElementById('soundToggle').setAttribute('aria-pressed', String(gameState.soundEnabled));
+            document.getElementById('musicToggle').textContent = gameState.musicEnabled ? '🎵 Music: On' : '🎵 Music: Off';
+            document.getElementById('musicToggle').setAttribute('aria-pressed', String(gameState.musicEnabled));
             document.getElementById('soundTheme').value = gameState.soundTheme;
             document.getElementById('backgroundMusicSelector').value = audioSystem.currentBackgroundMusic;
-            document.body.className = `theme-${gameState.visualTheme}`;
 
-            // Set card theme button
             document.querySelectorAll('.theme-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.theme === gameState.cardTheme);
             });
         }
     } catch (e) {
-        // Cannot load settings - use defaults
     }
 }
 
@@ -557,10 +558,6 @@ function startGame() {
 function renderGame() {
     const content = document.getElementById('game-content');
 
-    // Calculate grid class based on grid size
-    const gridSize = gameState.gridCols * gameState.gridRows;
-    let gridClass = 'grid-dynamic';
-
     const cardsHtml = gameState.cards.map(card => `
         <div class="card ${card.isFlipped ? 'flipped' : ''} ${card.isMatched ? 'matched' : ''}"
              data-id="${card.id}"
@@ -577,15 +574,21 @@ function renderGame() {
     `).join('');
 
     content.innerHTML = `
-        <div class="game-board">
-            <div class="game-info">
+        <div class="game-board memory-board-shell">
+            <div class="game-info memory-board-shell__header">
                 <button class="new-game-btn" onclick="showStartScreen()">🔄 Game Baru</button>
+                <div class="memory-board-shell__badges">
+                    <span class="badge">Grid ${gameState.gridCols} × ${gameState.gridRows}</span>
+                    <span class="badge">Tema ${getCardThemeLabel(gameState.cardTheme)}</span>
+                </div>
             </div>
-            <div class="card-grid ${gridClass}" style="grid-template-columns: repeat(${gameState.gridCols}, 1fr); grid-template-rows: repeat(${gameState.gridRows}, 1fr);">
+            <div class="card-grid memory-grid" style="--grid-cols:${gameState.gridCols}; --grid-rows:${gameState.gridRows};">
                 ${cardsHtml}
             </div>
         </div>
     `;
+
+    updateBoardSizing();
 }
 
 function flipCard(cardId) {
@@ -627,7 +630,7 @@ function checkForMatch() {
         updateStats();
 
         if (gameState.soundEnabled) {
-            audioSystem.playNotes([523, 659, 784], gameState.soundTheme, gameState.visualTheme);
+            audioSystem.playNotes([523, 659, 784], gameState.soundTheme, 'default');
         }
 
         // Mark cards as matched
@@ -644,7 +647,7 @@ function checkForMatch() {
     } else {
         // No match - flip cards back
         if (gameState.soundEnabled) {
-            audioSystem.playNotes([392, 330], gameState.soundTheme, gameState.visualTheme);
+            audioSystem.playNotes([392, 330], gameState.soundTheme, 'default');
         }
 
         addTrackedTimeout(() => {
@@ -677,7 +680,7 @@ function gameWon() {
     saveStats();
 
     if (gameState.soundEnabled) {
-        audioSystem.playVictoryMusic(gameState.visualTheme);
+        audioSystem.playVictoryMusic('default');
     }
 
     createConfetti();
@@ -888,12 +891,52 @@ function updateStats() {
     const statsDisplay = document.getElementById('statsDisplay');
     const elapsedTime = gameState.startTime ?
         Math.floor((Date.now() - gameState.startTime) / 1000) : 0;
+    const totalPairs = gameState.cards.length / 2 || 0;
+    const progress = totalPairs > 0 ? Math.round((gameState.matchedPairs / totalPairs) * 100) : 0;
+
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+    const progressPercent = document.getElementById('progressPercent');
+
+    if (progressBar) {
+        progressBar.style.width = `${progress}%`;
+    }
+    if (progressText) {
+        progressText.textContent = `${gameState.matchedPairs} / ${totalPairs} pasangan`;
+    }
+    if (progressPercent) {
+        progressPercent.textContent = `${progress}%`;
+    }
 
     statsDisplay.innerHTML = `
         <div class="stat">⏱️ ${formatTime(elapsedTime)}</div>
         <div class="stat">🎯 Langkah: ${gameState.moves}</div>
-        <div class="stat">✅ Cocok: ${gameState.matchedPairs}/${gameState.cards.length / 2 || 0}</div>
+        <div class="stat">✅ Cocok: ${gameState.matchedPairs}/${totalPairs}</div>
     `;
+}
+
+function updateBoardSizing() {
+    const grid = document.querySelector('.card-grid');
+    if (!grid) {
+        return;
+    }
+
+    const cols = gameState.gridCols;
+    const rows = gameState.gridRows;
+    const content = document.getElementById('game-content');
+    const contentWidth = content ? content.clientWidth : window.innerWidth;
+    const viewportHeight = window.innerHeight || 720;
+    const availableWidth = Math.max(280, contentWidth - 32);
+    const availableHeight = Math.max(220, viewportHeight - 360);
+    const gap = Math.max(8, Math.min(18, Math.round(18 - Math.max(cols, rows) * 0.8)));
+    const widthBasedSize = (availableWidth - (gap * (cols - 1))) / cols;
+    const heightBasedSize = (availableHeight - (gap * (rows - 1))) / rows;
+    const cardSize = Math.floor(Math.max(44, Math.min(112, Math.min(widthBasedSize, heightBasedSize))));
+
+    grid.style.setProperty('--grid-cols', cols);
+    grid.style.setProperty('--grid-rows', rows);
+    grid.style.setProperty('--grid-gap', `${gap}px`);
+    grid.style.setProperty('--card-size', `${cardSize}px`);
 }
 
 // ========================================
@@ -913,6 +956,9 @@ document.addEventListener('DOMContentLoaded', () => {
     loadStats();
     createBackgroundParticles();
     updateStats();
+    updateBoardSizing();
+
+    window.addEventListener('resize', updateBoardSizing);
 
     // Cleanup on page unload
     window.addEventListener('beforeunload', cleanup);

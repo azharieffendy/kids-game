@@ -2,117 +2,131 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="format-detection" content="telephone=no, date=no, email=no, address=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Permainan Memori - Memory Game</title>
+    <meta name="description" content="Temukan pasangan kartu dengan tampilan shell baru yang lebih rapi dan responsif.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../shared/design-tokens.css">
+    <link rel="stylesheet" href="../shared/design-base.css">
+    <link rel="stylesheet" href="../shared/design-components.css">
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
-    <div class="container">
-        <header>
-            <h1>🎮 Permainan Memori 🎮</h1>
-            <p>Temukan pasangan kartu yang sama!</p>
-        </header>
+<body class="memory-page">
+    <main class="app-shell memory-shell" aria-label="Permainan Memori">
+        <section class="topbar memory-topbar" aria-labelledby="memory-title">
+            <div class="topbar__copy">
+                <p class="badge topbar__eyebrow">Kids Games</p>
+                <h1 class="topbar__title" id="memory-title">Permainan Memori</h1>
+                <p class="topbar__summary">Temukan pasangan kartu yang sama sebelum papan penuh.</p>
+            </div>
 
-        <main>
-            <div id="game-area" class="game-area">
-                <div class="game-header">
-                    <div class="game-controls-left">
-                        <button id="homeButton" class="home-button" onclick="backToMenu()" title="Kembali ke menu utama">
-                            🏠 Menu
-                        </button>
-                    </div>
-                    <div class="sound-controls">
-                        <div class="theme-selector-container">
-                            <select id="visualTheme" class="theme-select" onchange="changeVisualTheme(this.value)" title="Pilih tema visual">
-                                <option value="default">🎨 Default</option>
-                                <option value="cotton-candy">🍭 Cotton Candy</option>
-                                <option value="ocean">🌊 Ocean</option>
-                                <option value="sunset">🌅 Sunset</option>
-                                <option value="forest">🌲 Forest</option>
-                            </select>
-                        </div>
-                        <div class="sound-theme-container">
-                            <select id="soundTheme" class="sound-theme-select" onchange="changeSoundTheme(this.value)" title="Pilih tema suara">
-                                <option value="fun">🎵 Fun</option>
-                                <option value="calm">🌊 Calm</option>
-                                <option value="exciting">🎉 Exciting</option>
-                            </select>
-                        </div>
-                        <div class="sound-theme-container">
-                            <select id="backgroundMusicSelector" class="sound-theme-select" onchange="changeBackgroundMusic(this.value)" title="Pilih musik latar">
-                                <option value="backsound1">🎵 Musik 1</option>
-                                <option value="backsound2">🎵 Musik 2</option>
-                                <option value="backsound3">🎵 Musik 3</option>
-                            </select>
-                        </div>
-                        <button id="soundToggle" class="sound-toggle" onclick="toggleSound()" title="Matikan/Hidupkan suara">🔊</button>
-                        <button id="musicToggle" class="sound-toggle" onclick="toggleMusic()" title="Matikan/Hidupkan musik">🎵</button>
-                    </div>
+            <div class="topbar__controls memory-topbar__controls" aria-label="Kontrol permainan">
+                <button id="homeButton" class="btn ghost home-button" onclick="backToMenu()" title="Kembali ke menu utama" aria-label="Kembali ke menu utama">
+                    🏠 Menu
+                </button>
+                <div class="sound-theme-container">
+                    <select id="soundTheme" class="sound-theme-select" onchange="changeSoundTheme(this.value)" title="Pilih tema suara" aria-label="Pilih tema suara">
+                        <option value="fun">🎵 Fun</option>
+                        <option value="calm">🌊 Calm</option>
+                        <option value="exciting">🎉 Exciting</option>
+                    </select>
                 </div>
-
-                <div class="stats-container">
-                    <div id="statsDisplay" class="stats-display"></div>
+                <div class="sound-theme-container">
+                    <select id="backgroundMusicSelector" class="sound-theme-select" onchange="changeBackgroundMusic(this.value)" title="Pilih musik latar" aria-label="Pilih musik latar">
+                        <option value="backsound1">🎵 Musik 1</option>
+                        <option value="backsound2">🎵 Musik 2</option>
+                        <option value="backsound3">🎵 Musik 3</option>
+                    </select>
                 </div>
+                <button id="soundToggle" class="btn ghost sound-toggle" onclick="toggleSound()" title="Matikan/Hidupkan suara" aria-label="Matikan atau hidupkan suara" aria-pressed="true">
+                    🔊 Sound
+                </button>
+                <button id="musicToggle" class="btn ghost sound-toggle" onclick="toggleMusic()" title="Matikan/Hidupkan musik" aria-label="Matikan atau hidupkan musik" aria-pressed="true">
+                    🎵 Music: On
+                </button>
+            </div>
+        </section>
 
-                <div id="game-content">
-                    <div class="start-screen">
-                        <h2>Mari Bermain!</h2>
-                        <p>Klik kartu untuk menemukan pasangan yang sama</p>
+        <section class="memory-hud" aria-label="Status permainan">
+            <div class="stat-card memory-score-strip">
+                <div class="memory-score-strip__label">Skor</div>
+                <div id="statsDisplay" class="stats-display" aria-live="polite"></div>
+            </div>
 
-                        <div class="grid-size-selection">
-                            <h3>Pilih Ukuran Grid:</h3>
-                            <div class="grid-select-container">
-                                <select id="gridSizeSelect" class="grid-select" onchange="updateGridFromSelect(this.value)">
-                                    <optgroup label="Mudah (Easy)">
-                                        <option value="2,2">2 × 2 (4 kartu)</option>
-                                        <option value="3,2">3 × 2 (6 kartu)</option>
-                                        <option value="4,2">4 × 2 (8 kartu)</option>
-                                    </optgroup>
-                                    <optgroup label="Sedang (Medium)">
-                                        <option value="3,4">3 × 4 (12 kartu)</option>
-                                        <option value="4,4" selected>4 × 4 (16 kartu)</option>
-                                        <option value="5,4">5 × 4 (20 kartu)</option>
-                                        <option value="6,4">6 × 4 (24 kartu)</option>
-                                    </optgroup>
-                                    <optgroup label="Sulit (Hard)">
-                                        <option value="5,6">5 × 6 (30 kartu)</option>
-                                        <option value="6,6">6 × 6 (36 kartu)</option>
-                                        <option value="7,6">7 × 6 (42 kartu)</option>
-                                    </optgroup>
-                                </select>
-                            </div>
-                        </div>
+            <div class="stat-card memory-progress-panel" id="progressContainer">
+                <div class="memory-progress-panel__header">
+                    <span class="section-label">Progress</span>
+                    <span class="memory-progress-panel__meta" id="progressText">0 / 0 pasangan</span>
+                </div>
+                <div class="progress-bar" aria-hidden="true">
+                    <div class="progress-bar__fill" id="progressBar"></div>
+                </div>
+                <div class="memory-progress-panel__percent" id="progressPercent">0%</div>
+            </div>
+        </section>
 
-                        <div class="theme-selection">
-                            <h3>Pilih Tema Kartu:</h3>
-                            <div class="card-theme-buttons">
-                                <button class="theme-btn animals active" onclick="setCardTheme('animals')" data-theme="animals">
-                                    🐶 Hewan
-                                </button>
-                                <button class="theme-btn fruits" onclick="setCardTheme('fruits')" data-theme="fruits">
-                                    🍎 Buah
-                                </button>
-                                <button class="theme-btn vehicles" onclick="setCardTheme('vehicles')" data-theme="vehicles">
-                                    🚗 Kendaraan
-                                </button>
-                                <button class="theme-btn emojis" onclick="setCardTheme('emojis')" data-theme="emojis">
-                                    😀 Emoji
-                                </button>
-                            </div>
+        <section class="memory-stage" aria-label="Area permainan">
+            <div id="game-content" class="memory-stage__content">
+                <div class="start-screen memory-start-screen">
+                    <h2>Mari Bermain!</h2>
+                    <p>Klik kartu untuk menemukan pasangan yang sama</p>
+
+                    <div class="grid-size-selection">
+                        <h3>Pilih Ukuran Grid:</h3>
+                        <div class="grid-select-container">
+                            <select id="gridSizeSelect" class="grid-select" onchange="updateGridFromSelect(this.value)" aria-label="Pilih ukuran grid">
+                                <optgroup label="Mudah (Easy)">
+                                    <option value="2,2">2 × 2 (4 kartu)</option>
+                                    <option value="3,2">3 × 2 (6 kartu)</option>
+                                    <option value="4,2">4 × 2 (8 kartu)</option>
+                                </optgroup>
+                                <optgroup label="Sedang (Medium)">
+                                    <option value="3,4">3 × 4 (12 kartu)</option>
+                                    <option value="4,4" selected>4 × 4 (16 kartu)</option>
+                                    <option value="5,4">5 × 4 (20 kartu)</option>
+                                    <option value="6,4">6 × 4 (24 kartu)</option>
+                                </optgroup>
+                                <optgroup label="Sulit (Hard)">
+                                    <option value="5,6">5 × 6 (30 kartu)</option>
+                                    <option value="6,6">6 × 6 (36 kartu)</option>
+                                    <option value="7,6">7 × 6 (42 kartu)</option>
+                                </optgroup>
+                            </select>
                         </div>
-                        
-                        <div class="start-game-button">
-                            <button class="start-btn" onclick="startGame()">🎮 Mulai Game</button>
-                            <button class="stats-btn" onclick="showStatistics()">📊 Statistik</button>
+                    </div>
+
+                    <div class="theme-selection">
+                        <h3>Pilih Tema Kartu:</h3>
+                        <div class="card-theme-buttons">
+                            <button class="theme-btn animals active" onclick="setCardTheme('animals')" data-theme="animals">
+                                🐶 Hewan
+                            </button>
+                            <button class="theme-btn fruits" onclick="setCardTheme('fruits')" data-theme="fruits">
+                                🍎 Buah
+                            </button>
+                            <button class="theme-btn vehicles" onclick="setCardTheme('vehicles')" data-theme="vehicles">
+                                🚗 Kendaraan
+                            </button>
+                            <button class="theme-btn emojis" onclick="setCardTheme('emojis')" data-theme="emojis">
+                                😀 Emoji
+                            </button>
                         </div>
+                    </div>
+
+                    <div class="start-game-button">
+                        <button class="start-btn" onclick="startGame()">🎮 Mulai Game</button>
+                        <button class="stats-btn" onclick="showStatistics()">📊 Statistik</button>
                     </div>
                 </div>
             </div>
-        </main>
-    </div>
+        </section>
+    </main>
 
     <div class="background-particles" id="backgroundParticles"></div>
 

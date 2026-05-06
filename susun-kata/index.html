@@ -2,116 +2,115 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="format-detection" content="telephone=no, date=no, email=no, address=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Belajar Membaca - Susun Kata</title>
+    <meta name="description" content="Susun huruf untuk membentuk kata yang benar dengan tampilan yang lebih rapi dan responsif.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../shared/design-tokens.css">
+    <link rel="stylesheet" href="../shared/design-base.css">
+    <link rel="stylesheet" href="../shared/design-components.css">
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
-    <div class="container">
-        <header>
-            <h1>🎮 Susun Kata 🎮</h1>
-            <p>Susun huruf untuk membentuk kata yang benar!</p>
-        </header>
+<body class="reading-page">
+    <main class="app-shell reading-shell" aria-label="Belajar Membaca - Susun Kata">
+        <section class="topbar reading-topbar" aria-labelledby="reading-title">
+            <div class="topbar__copy">
+                <p class="badge topbar__eyebrow">Kids Games</p>
+                <h1 class="topbar__title" id="reading-title">Susun Kata</h1>
+                <p class="topbar__summary">Lihat gambar, dengar kata, lalu susun hurufnya dengan benar.</p>
+            </div>
 
-        <main>
-            <div id="game-area" class="game-area">
-                <div class="game-header">
-                    <div class="game-controls-left">
-                        <button id="homeButton" class="home-button" onclick="backToMenu()" title="Kembali ke menu utama">
-                            🏠 Menu
-                        </button>
-                        <div class="difficulty-selector-container" id="difficultySelectorContainer" style="display: none;">
-                            <select id="difficultySelector" class="difficulty-select" onchange="changeDifficulty(this.value)" title="Ubah tingkat kesulitan">
-                                <option value="easy">😊 Mudah</option>
-                                <option value="medium">🤔 Sedang</option>
-                                <option value="hard">🧠 Sulit</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="sound-controls">
-                        <div class="theme-selector-container">
-                            <select id="visualTheme" class="theme-select" onchange="changeVisualTheme(this.value)" title="Pilih tema visual">
-                                <option value="default">🎨 Default</option>
-                                <option value="cotton-candy">🍭 Cotton Candy</option>
-                                <option value="ocean">🌊 Ocean</option>
-                                <option value="sunset">🌅 Sunset</option>
-                                <option value="forest">🌲 Forest</option>
-                            </select>
-                        </div>
-                        <div class="sound-theme-container">
-                            <select id="soundTheme" class="sound-theme-select" onchange="changeSoundTheme(this.value)" title="Pilih tema suara">
-                                <option value="fun">🎵 Fun</option>
-                                <option value="calm">🌊 Calm</option>
-                                <option value="exciting">🎉 Exciting</option>
-                            </select>
-                        </div>
-                        <div class="sound-theme-container">
-                            <select id="backgroundMusicSelector" class="sound-theme-select" onchange="changeBackgroundMusic(this.value)" title="Pilih musik latar">
-                                <option value="backsound1">🎵 Musik 1</option>
-                                <option value="backsound2">🎵 Musik 2</option>
-                                <option value="backsound3">🎵 Musik 3</option>
-                            </select>
-                        </div>
-                        <button id="soundToggle" class="sound-toggle" onclick="toggleSound()" title="Matikan/Hidupkan suara">🔊</button>
-                        <button id="musicToggle" class="sound-toggle" onclick="toggleMusic()" title="Matikan/Hidupkan musik">🎵</button>
-                    </div>
+            <div class="topbar__controls reading-topbar__controls" aria-label="Kontrol permainan">
+                <button id="homeButton" class="btn ghost home-button" onclick="backToMenu()" title="Kembali ke menu utama">
+                    🏠 Menu
+                </button>
+                <div class="difficulty-selector-container" id="difficultySelectorContainer" style="display: none;">
+                    <select id="difficultySelector" class="difficulty-select" onchange="changeDifficulty(this.value)" title="Ubah tingkat kesulitan" aria-label="Pilih tingkat kesulitan">
+                        <option value="easy">😊 Mudah</option>
+                        <option value="medium">🤔 Sedang</option>
+                        <option value="hard">🧠 Sulit</option>
+                    </select>
                 </div>
-                <div class="stats-container">
-                    <div id="statsDisplay" class="stats-display"></div>
+                <div class="sound-theme-container">
+                    <select id="soundTheme" class="sound-theme-select" onchange="changeSoundTheme(this.value)" title="Pilih tema suara" aria-label="Pilih tema suara">
+                        <option value="fun">🎵 Fun</option>
+                        <option value="calm">🌊 Calm</option>
+                        <option value="exciting">🎉 Exciting</option>
+                    </select>
                 </div>
-                <div class="progress-container" id="progressContainer" style="display: none;">
-                    <div class="progress-label">
-                        <span id="progressText">0 / 0</span>
-                        <span id="progressPercent">0%</span>
-                    </div>
-                    <div class="progress-bar-wrapper">
-                        <div class="progress-bar" id="progressBar"></div>
-                    </div>
+                <div class="sound-theme-container">
+                    <select id="backgroundMusicSelector" class="sound-theme-select" onchange="changeBackgroundMusic(this.value)" title="Pilih musik latar" aria-label="Pilih musik latar">
+                        <option value="backsound1">🎵 Musik 1</option>
+                        <option value="backsound2">🎵 Musik 2</option>
+                        <option value="backsound3">🎵 Musik 3</option>
+                    </select>
                 </div>
-                <div id="game-content">
-                    <div class="start-screen">
-                        <h2>Mau mulai bermain?</h2>
-                        <p>Lihat gambarnya, lalu susun hurufnya!</p>
-                        
-                        <div class="difficulty-selection">
-                            <h3>Pilih Tingkat Kesulitan:</h3>
-                            <div class="difficulty-buttons">
-                                <button class="difficulty-btn easy" onclick="startGame('easy')" title="Kata 3-4 huruf">
-                                    😊 Mudah
-                                    <small>(3-4 huruf)</small>
-                                </button>
-                                <button class="difficulty-btn medium" onclick="startGame('medium')" title="Kata 5-6 huruf">
-                                    🤔 Sedang
-                                    <small>(5-6 huruf)</small>
-                                </button>
-                                <button class="difficulty-btn hard" onclick="startGame('hard')" title="Kata 7+ huruf">
-                                    🧠 Sulit
-                                    <small>(7+ huruf)</small>
-                                </button>
-                            </div>
-                        </div>
+                <button id="soundToggle" class="btn ghost sound-toggle" onclick="toggleSound()" title="Matikan/Hidupkan suara" aria-label="Matikan atau hidupkan suara" aria-pressed="true">🔊 Sound</button>
+                <button id="musicToggle" class="btn ghost sound-toggle" onclick="toggleMusic()" title="Matikan/Hidupkan musik" aria-label="Matikan atau hidupkan musik" aria-pressed="true">🎵 Music: On</button>
+            </div>
+        </section>
 
-                        <div class="answer-mode-selection">
-                            <h3>Pilih Mode Jawaban:</h3>
-                            <div class="answer-mode-buttons">
-                                <button class="answer-mode-btn click-mode active" onclick="setAnswerMode('click')" data-answer-mode="click" title="Klik huruf untuk menyusun kata">
-                                    🖱️ Klik Huruf
-                                </button>
-                                <button class="answer-mode-btn input-mode" onclick="setAnswerMode('input')" data-answer-mode="input" title="Ketik jawaban langsung">
-                                    ⌨️ Ketik Jawaban
-                                </button>
-                            </div>
-                        </div>
-                        
+        <section class="reading-hud" aria-label="Status permainan">
+            <div class="stats-container reading-stats">
+                <div id="statsDisplay" class="stats-display" aria-live="polite"></div>
+            </div>
 
+            <div class="progress-container reading-progress" id="progressContainer" style="display: none;">
+                <div class="progress-label">
+                    <span id="progressText">0 / 0</span>
+                    <span id="progressPercent">0%</span>
+                </div>
+                <div class="progress-bar-wrapper">
+                    <div class="progress-bar" id="progressBar"></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="reading-stage" aria-label="Area permainan">
+            <div id="game-content" class="reading-stage__content">
+                <div class="start-screen">
+                    <h2>Mau mulai bermain?</h2>
+                    <p>Lihat gambarnya, lalu susun hurufnya!</p>
+
+                    <div class="difficulty-selection">
+                        <h3>Pilih Tingkat Kesulitan:</h3>
+                        <div class="difficulty-buttons">
+                            <button class="difficulty-btn easy" onclick="startGame('easy')" title="Kata 3-4 huruf">
+                                😊 Mudah
+                                <small>(3-4 huruf)</small>
+                            </button>
+                            <button class="difficulty-btn medium" onclick="startGame('medium')" title="Kata 5-6 huruf">
+                                🤔 Sedang
+                                <small>(5-6 huruf)</small>
+                            </button>
+                            <button class="difficulty-btn hard" onclick="startGame('hard')" title="Kata 7+ huruf">
+                                🧠 Sulit
+                                <small>(7+ huruf)</small>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="answer-mode-selection">
+                        <h3>Pilih Mode Jawaban:</h3>
+                        <div class="answer-mode-buttons">
+                            <button class="answer-mode-btn click-mode active" onclick="setAnswerMode('click')" data-answer-mode="click" title="Klik huruf untuk menyusun kata">
+                                🖱️ Klik Huruf
+                            </button>
+                            <button class="answer-mode-btn input-mode" onclick="setAnswerMode('input')" data-answer-mode="input" title="Ketik jawaban langsung">
+                                ⌨️ Ketik Jawaban
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </main>
-    </div>
+        </section>
+    </main>
 
     <script src="script.js"></script>
 </body>
