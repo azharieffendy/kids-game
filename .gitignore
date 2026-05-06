@@ -6,3 +6,9 @@ AGENTS.md
 /node_modules
 /test-results
 /playwright-report
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+.env*
+!.env.example
